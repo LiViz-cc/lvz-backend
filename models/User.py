@@ -19,10 +19,9 @@ class User(db.Document):
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
-    
+
     def desensitize(self):
         del self.password
-    
 
 
 # delete user created projects when delete user
@@ -32,3 +31,4 @@ class User(db.Document):
 # if one user againsts the rules, we need to ban it
 # just set enable = -1 (reason code)
 User.register_delete_rule(Project, 'created_by', db.CASCADE)
+# TODO: what about other models? should we add cascade for them too?

@@ -1,10 +1,11 @@
+from errors import ForbiddenError, NotFoundError
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from mongoengine.errors import DoesNotExist
-from .response_wrapper import response_wrapper
 from models import User
 from mongoengine.errors import DoesNotExist
-from errors import NotFoundError, ForbiddenError
+
+from .guard import myguard
+from .response_wrapper import response_wrapper
 
 
 class UserResource(Resource):
@@ -19,6 +20,9 @@ class UserResource(Resource):
 
         # check authorization
         user_id = get_jwt_identity()
+        myguard.check.user_id(user_id)
+
+        # user can only get their own info
         if user_id != str(user.id):
             raise ForbiddenError()
 
