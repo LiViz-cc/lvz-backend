@@ -59,18 +59,21 @@ class ProjectsResource(Resource):
         if type(public) != bool:
             public = False
             body['public'] = public
-        data_source_id = body.get('data_source', None)
-        if data_source_id:
-            try:
-                data_source = DataSource.objects.get(id=data_source_id)
-            except DoesNotExist:
-                raise NotFoundError('data_source', 'id={}'.format(data_source_id))
-            if not data_source.public:
-                if public:
-                    raise InvalidParamError('Cannot create a public project with private data source!')
-                if data_source.created_by.id != user.id:
-                    raise ForbiddenError()
+        data_source_ids = body.get('data_source', None)
+        if data_source_ids:
+            for data_source_id in data_source_ids:            
+                try:
+                    data_source = DataSource.objects.get(id=data_source_id)
+                except DoesNotExist:
+                    raise NotFoundError('data_source', 'id={}'.format(data_source_id))
+                if not data_source.public:
+                    if public:
+                        raise InvalidParamError('Cannot create a public project with private data source!')
+                    if data_source.created_by.id != user.id:
+                        raise ForbiddenError()
+
         display_schema_id = body.get('display_schema', None)
+
         if display_schema_id:
             try:
                 display_schema = DisplaySchema.objects.get(id=display_schema_id)
