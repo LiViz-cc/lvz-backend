@@ -103,3 +103,67 @@ class DataSourceResource(Resource):
                 raise ForbiddenError()
 
         return data_source
+
+    @response_wrapper
+    @jwt_required(optional=True)
+    def put(self, id):
+        # get request body dict
+        body = request.get_json()
+
+        # pre-validate params
+
+        # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
+        try:
+            data_source = DataSource.objects.get(id=id)
+        except DoesNotExist:
+            raise NotFoundError('data_source', 'id={}'.format(id))
+
+        # check authorization
+        user_id = get_jwt_identity()
+        myguard.check_literaly.user_id(user_id)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(user_id))
+
+        if data_source.created_by != user:
+            raise ForbiddenError()
+
+        # update project
+        try:
+            data_source.modify(**body)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+        return data_source
+
+    @response_wrapper
+    @jwt_required(optional=True)
+    def delete(self, id):
+        # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
+        try:
+            data_source = DataSource.objects.get(id=id)
+        except DoesNotExist:
+            raise NotFoundError('data_source', 'id={}'.format(id))
+
+        # check authorization
+        user_id = get_jwt_identity()
+        myguard.check_literaly.user_id(user_id)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(user_id))
+
+        if data_source.created_by != user:
+            raise ForbiddenError()
+
+        # delete project
+        data_source.delete()
+
+        return {}

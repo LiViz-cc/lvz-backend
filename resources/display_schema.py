@@ -98,3 +98,15 @@ class DisplaySchemaResource(Resource):
                 raise ForbiddenError()
 
         return display_schema
+
+    @response_wrapper
+    @jwt_required(optional=True)
+    def put(self, id):
+        # TODO: put method for data_source
+        pass
+
+    @response_wrapper
+    @jwt_required(optional=True)
+    def delete(self, id):
+        # TODO: delete method for data_source
+        pass
