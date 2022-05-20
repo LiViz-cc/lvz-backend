@@ -6,7 +6,8 @@ from .response_wrapper import response_wrapper
 import datetime
 from models import User, DisplaySchema
 from mongoengine.errors import ValidationError, DoesNotExist
-from errors import NotFoundError, ForbiddenError, InvalidParamError
+from errors import NotFoundError, ForbiddenError, InvalidParamError, UnauthorizedError
+from .guard import myguard
 
 
 class DisplaySchemasResource(Resource):
@@ -26,8 +27,8 @@ class DisplaySchemasResource(Resource):
         if 'created_by' in args:
             # check authorization
             user_id = get_jwt_identity()
-            if user_id is None:
-                raise ForbiddenError()  # TODO maybe should raise UnauthorizedError?
+            myguard.check.user_id(user_id)
+
             try:
                 user = User.objects.get(id=user_id)
             except DoesNotExist:
@@ -59,6 +60,8 @@ class DisplaySchemasResource(Resource):
 
         # set created by
         user_id = get_jwt_identity()
+        myguard.check.user_id(user_id)
+
         try:
             user = User.objects.get(id=user_id)
         except DoesNotExist:

@@ -1,12 +1,14 @@
-from flask import request
-from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from mongoengine.errors import DoesNotExist
-from .response_wrapper import response_wrapper
 import datetime
-from models import User, DataSource
-from mongoengine.errors import ValidationError, DoesNotExist
-from errors import NotFoundError, ForbiddenError, InvalidParamError
+
+from errors import ForbiddenError, InvalidParamError, NotFoundError
+from flask import request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_restful import Resource
+from models import DataSource, User
+from mongoengine.errors import DoesNotExist, ValidationError
+
+from .guard import myguard
+from .response_wrapper import response_wrapper
 
 
 class DataSourcesResource(Resource):
@@ -26,8 +28,8 @@ class DataSourcesResource(Resource):
         if 'created_by' in args:
             # check authorization
             user_id = get_jwt_identity()
-            if user_id is None:
-                raise ForbiddenError()  # TODO maybe should raise UnauthorizedError?
+            myguard._check.user_id(user_id)
+
             try:
                 user = User.objects.get(id=user_id)
             except DoesNotExist:
@@ -59,6 +61,8 @@ class DataSourcesResource(Resource):
 
         # set created by
         user_id = get_jwt_identity()
+        myguard._check.user_id(user_id)
+
         try:
             user = User.objects.get(id=user_id)
         except DoesNotExist:
@@ -78,6 +82,8 @@ class DataSourceResource(Resource):
     @response_wrapper
     @jwt_required(optional=True)
     def get(self, id):
+        myguard._check.datasourse_id(id)
+
         # query data source via id
         try:
             data_source = DataSource.objects.get(id=id)
@@ -87,6 +93,8 @@ class DataSourceResource(Resource):
         # check authorization
         if not data_source.public:
             user_id = get_jwt_identity()
+            myguard._check.user_id(user_id)
+
             try:
                 user = User.objects.get(id=user_id)
             except DoesNotExist:

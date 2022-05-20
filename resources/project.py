@@ -1,12 +1,14 @@
-from flask import request
-from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from mongoengine.errors import DoesNotExist
-from .response_wrapper import response_wrapper
 import datetime
-from models import Project, User, DataSource, DisplaySchema
-from mongoengine.errors import ValidationError, DoesNotExist
-from errors import NotFoundError, ForbiddenError, InvalidParamError
+
+from errors import ForbiddenError, InvalidParamError, NotFoundError
+from flask import request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_restful import Resource
+from models import DataSource, DisplaySchema, Project, User
+from mongoengine.errors import DoesNotExist, ValidationError
+
+from .guard import myguard
+from .response_wrapper import response_wrapper
 
 
 class ProjectsResource(Resource):
@@ -23,11 +25,12 @@ class ProjectsResource(Resource):
                 query['public'] = False
             if args['public'].lower() == 'true':
                 query['public'] = True
+
         if 'created_by' in args:
             # check authorization
             user_id = get_jwt_identity()
-            if user_id is None:
-                raise ForbiddenError()  # TODO maybe should raise UnauthorizedError?
+            myguard.check.user_id(user_id)
+
             try:
                 user = User.objects.get(id=user_id)
             except DoesNotExist:
@@ -46,19 +49,24 @@ class ProjectsResource(Resource):
     def post(self):
         # get request body dict
         body = request.get_json()
+        body: dict
 
         # get creator user
         user_id = get_jwt_identity()
+        myguard.check.user_id(user_id)
+
         try:
             user = User.objects.get(id=user_id)
         except DoesNotExist:
             raise NotFoundError('user', 'id={}'.format(user_id))
 
-        # pre-validate params
+        # pre-validate params (is_public)
         public = body.get('public', None)
         if type(public) != bool:
             public = False
             body['public'] = public
+
+        # pre-validate params (data_source_id)
         data_source_ids = body.get('data_source', None)
         if data_source_ids:
             for data_source_id in data_source_ids:            
@@ -72,16 +80,22 @@ class ProjectsResource(Resource):
                     if data_source.created_by.id != user.id:
                         raise ForbiddenError()
 
+
+        # pre-validate params (display_schema_id)
+
         display_schema_id = body.get('display_schema', None)
 
         if display_schema_id:
             try:
-                display_schema = DisplaySchema.objects.get(id=display_schema_id)
+                display_schema = DisplaySchema.objects.get(
+                    id=display_schema_id)
             except DoesNotExist:
-                raise NotFoundError('display_schema', 'id={}'.format(display_schema_id))
+                raise NotFoundError(
+                    'display_schema', 'id={}'.format(display_schema_id))
             if not display_schema.public:
                 if public:
-                    raise InvalidParamError('Cannot create a public project with private display schema!')
+                    raise InvalidParamError(
+                        'Cannot create a public project with private display schema!')
                 if display_schema.created_by.id != user.id:
                     raise ForbiddenError()
 
@@ -124,6 +138,8 @@ class ProjectResource(Resource):
         # check authorization
         if not project.public:
             user_id = get_jwt_identity()
+            myguard.check.user_id(user_id)
+
             try:
                 user = User.objects.get(id=user_id)
             except DoesNotExist:
@@ -149,6 +165,8 @@ class ProjectResource(Resource):
 
         # check authorization
         user_id = get_jwt_identity()
+        myguard.check.user_id(user_id)
+
         try:
             user = User.objects.get(id=user_id)
         except DoesNotExist:
@@ -161,7 +179,7 @@ class ProjectResource(Resource):
             project.modify(**body)
         except ValidationError as e:
             raise InvalidParamError(e.message)
-        
+
         # TODO update modified
 
         return project
@@ -177,6 +195,8 @@ class ProjectResource(Resource):
 
         # check authorization
         user_id = get_jwt_identity()
+        myguard.check.user_id(user_id)
+        
         try:
             user = User.objects.get(id=user_id)
         except DoesNotExist:
