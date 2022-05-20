@@ -20,7 +20,7 @@ class UserResource(Resource):
 
         # check authorization
         user_id = get_jwt_identity()
-        myguard.check.user_id(user_id)
+        myguard.check_literaly.user_id(user_id)
 
         # user can only get their own info
         if user_id != str(user.id):

@@ -27,7 +27,7 @@ class DisplaySchemasResource(Resource):
         if 'created_by' in args:
             # check authorization
             user_id = get_jwt_identity()
-            myguard.check.user_id(user_id)
+            myguard.check_literaly.user_id(user_id)
 
             try:
                 user = User.objects.get(id=user_id)
@@ -60,7 +60,7 @@ class DisplaySchemasResource(Resource):
 
         # set created by
         user_id = get_jwt_identity()
-        myguard.check.user_id(user_id)
+        myguard.check_literaly.user_id(user_id)
 
         try:
             user = User.objects.get(id=user_id)

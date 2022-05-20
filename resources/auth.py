@@ -7,6 +7,7 @@ from models import User
 from mongoengine.errors import NotUniqueError, ValidationError, DoesNotExist
 from errors import InvalidParamError, EmailAlreadyExistsError, UnauthorizedError
 from .response_wrapper import response_wrapper
+from .guard import myguard
 
 
 class SignupResource(Resource):
@@ -17,12 +18,7 @@ class SignupResource(Resource):
 
         # pre-validate params
         password = body.get('password', None)
-        if type(password) != str:
-            raise InvalidParamError('Password (string) must be provided.')
-        if len(password) < 6 or len(password) > 20:
-            raise InvalidParamError(
-                'Password length must between 6 and 20 (included).')
-        # TODO more rules, e.g. special character limit, complexity level, etc.
+        myguard.check_literaly.password(password=password, is_new_user=True)
 
         # construct new user object
         user = User(**body)
@@ -58,9 +54,9 @@ class LoginResource(Resource):
         email = body.get('email', None)
         if type(email) != str:
             raise InvalidParamError('Email (string) must be provided.')
+
         password = body.get('password', None)
-        if type(password) != str:
-            raise InvalidParamError('Password (string) must be provided.')
+        myguard.check_literaly.password(password=password, is_new_user=False)
 
         # query user
         try:

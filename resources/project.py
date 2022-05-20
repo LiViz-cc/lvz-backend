@@ -29,7 +29,7 @@ class ProjectsResource(Resource):
         if 'created_by' in args:
             # check authorization
             user_id = get_jwt_identity()
-            myguard.check.user_id(user_id)
+            myguard.check_literaly.user_id(user_id)
 
             try:
                 user = User.objects.get(id=user_id)
@@ -53,7 +53,7 @@ class ProjectsResource(Resource):
 
         # get creator user
         user_id = get_jwt_identity()
-        myguard.check.user_id(user_id)
+        myguard.check_literaly.user_id(user_id)
 
         try:
             user = User.objects.get(id=user_id)
@@ -69,20 +69,20 @@ class ProjectsResource(Resource):
         # pre-validate params (data_source_id)
         data_source_ids = body.get('data_source', None)
         if data_source_ids:
-            for data_source_id in data_source_ids:            
+            for data_source_id in data_source_ids:
                 try:
                     data_source = DataSource.objects.get(id=data_source_id)
                 except DoesNotExist:
-                    raise NotFoundError('data_source', 'id={}'.format(data_source_id))
+                    raise NotFoundError(
+                        'data_source', 'id={}'.format(data_source_id))
                 if not data_source.public:
                     if public:
-                        raise InvalidParamError('Cannot create a public project with private data source!')
+                        raise InvalidParamError(
+                            'Cannot create a public project with private data source!')
                     if data_source.created_by.id != user.id:
                         raise ForbiddenError()
 
-
         # pre-validate params (display_schema_id)
-
         display_schema_id = body.get('display_schema', None)
 
         if display_schema_id:
@@ -130,6 +130,8 @@ class ProjectResource(Resource):
     @jwt_required(optional=True)
     def get(self, id):
         # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
         try:
             project = Project.objects.get(id=id)
         except DoesNotExist:
@@ -138,7 +140,7 @@ class ProjectResource(Resource):
         # check authorization
         if not project.public:
             user_id = get_jwt_identity()
-            myguard.check.user_id(user_id)
+            myguard.check_literaly.user_id(user_id)
 
             try:
                 user = User.objects.get(id=user_id)
@@ -158,6 +160,8 @@ class ProjectResource(Resource):
         # pre-validate params
 
         # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
         try:
             project = Project.objects.get(id=id)
         except DoesNotExist:
@@ -165,7 +169,7 @@ class ProjectResource(Resource):
 
         # check authorization
         user_id = get_jwt_identity()
-        myguard.check.user_id(user_id)
+        myguard.check_literaly.user_id(user_id)
 
         try:
             user = User.objects.get(id=user_id)
@@ -184,10 +188,13 @@ class ProjectResource(Resource):
 
         return project
 
+    
     @response_wrapper
     @jwt_required()
     def delete(self, id):
         # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
         try:
             project = Project.objects.get(id=id)
         except DoesNotExist:
@@ -195,8 +202,8 @@ class ProjectResource(Resource):
 
         # check authorization
         user_id = get_jwt_identity()
-        myguard.check.user_id(user_id)
-        
+        myguard.check_literaly.user_id(user_id)
+
         try:
             user = User.objects.get(id=user_id)
         except DoesNotExist:
