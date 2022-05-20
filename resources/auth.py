@@ -76,4 +76,7 @@ class LoginResource(Resource):
         expires = datetime.timedelta(days=7)
         access_token = create_access_token(
             identity=str(user.id), expires_delta=expires)
+
+        # return desensitized created user
+        user.desensitize()
         return {'token': access_token, 'user': json.loads(user.to_json())}
