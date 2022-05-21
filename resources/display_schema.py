@@ -102,11 +102,63 @@ class DisplaySchemaResource(Resource):
     @response_wrapper
     @jwt_required(optional=True)
     def put(self, id):
-        # TODO: put method for data_source
-        pass
+        # get request body dict
+        body = request.get_json()
+
+        # pre-validate params
+
+        # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
+        try:
+            display_schema = DisplaySchema.objects.get(id=id)
+        except DoesNotExist:
+            raise NotFoundError('display_schema', 'id={}'.format(id))
+
+        # check authorization
+        user_id = get_jwt_identity()
+        myguard.check_literaly.user_id(user_id)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(user_id))
+        if display_schema.created_by != user:
+            raise ForbiddenError()
+
+        # update project
+        try:
+            display_schema.modify(**body)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+        # TODO update modified
+
+        return display_schema
 
     @response_wrapper
     @jwt_required(optional=True)
     def delete(self, id):
-        # TODO: delete method for data_source
-        pass
+        # query project via id
+        myguard.check_literaly.datasourse_id(id)
+
+        try:
+            display_schema = DisplaySchema.objects.get(id=id)
+        except DoesNotExist:
+            raise NotFoundError('display_schema', 'id={}'.format(id))
+
+        # check authorization
+        user_id = get_jwt_identity()
+        myguard.check_literaly.user_id(user_id)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(user_id))
+        if display_schema.created_by != user:
+            raise ForbiddenError()
+
+        # delete project
+        display_schema.delete()
+
+        return {}
