@@ -1,4 +1,5 @@
 from database import db
+from models.ShareConfig import ShareConfig
 from .Project import Project
 from flask_bcrypt import generate_password_hash, check_password_hash
 
@@ -13,6 +14,8 @@ class User(db.Document):
     # TODO reverse_delete_rule?
     projects = db.ListField(
         db.ReferenceField('Project', reverse_delete_rule=db.PULL))
+    share_configs = db.ListField(
+        db.ReferenceField('ShareConfig', reverse_delete_rule=db.PULL))
 
     def hash_password(self):
         self.password = generate_password_hash(self.password).decode('utf8')
@@ -31,4 +34,5 @@ class User(db.Document):
 # if one user againsts the rules, we need to ban it
 # just set enable = -1 (reason code)
 User.register_delete_rule(Project, 'created_by', db.CASCADE)
+User.register_delete_rule(ShareConfig, 'created_by', db.CASCADE)
 # TODO: what about other models? should we add cascade for them too?

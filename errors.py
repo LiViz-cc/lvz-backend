@@ -31,3 +31,10 @@ class UnauthorizedError(ServerError):
 class ForbiddenError(ServerError):
     def __init__(self):
         super().__init__('Forbidden', 403, 'Cannot access with given authorization.')
+
+
+class NotFinishedYet(Exception):
+    """
+    A remark for codes working in progress
+    """
+    pass
