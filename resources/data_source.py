@@ -82,7 +82,7 @@ class DataSourceResource(Resource):
     @response_wrapper
     @jwt_required(optional=True)
     def get(self, id):
-        myguard._check.datasourse_id(id)
+        myguard._check.object_id(id)
 
         # query data source via id
         try:
@@ -113,7 +113,7 @@ class DataSourceResource(Resource):
         # pre-validate params
 
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             data_source = DataSource.objects.get(id=id)
@@ -144,7 +144,7 @@ class DataSourceResource(Resource):
     @jwt_required(optional=True)
     def delete(self, id):
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             data_source = DataSource.objects.get(id=id)

@@ -5,11 +5,11 @@ class CheckingCenter():
     """
     A class as a literal checker.
     Caution: Please note it will only check if the parameters are literaly correct.
-    No guarantee whether the input is valid in the database.
+    No guarantee whether the input is valid in the database or whether it is reachable.
     """
 
     def __init__(self) -> None:
-        self.LENGTH_OF_DATASOURCE_ID = 24
+        self.LENGTH_OF_DATA_OBJECT_ID = 24
         self.MIN_LENGTH_OF_PASSWORD = 6
         self.MAX_LENGTH_OF_PASSWORD = 20
 
@@ -17,7 +17,7 @@ class CheckingCenter():
         """
         Check if `user_id` is valid
         Caution: Only check if `user_id` is literally a valid string.
-        No guarantee whether `user_id` exists in the database or is reachable.
+        No guarantee whether `user_id` exists in the database or whether it is reachable.
 
         Args:
             user_id (str): user id
@@ -32,11 +32,11 @@ class CheckingCenter():
             raise UnauthorizedError()
         return self
 
-    def datasourse_id(self, datasourse_id: str):
+    def object_id(self, object_id: str):
         """
-        Check if `datasourse_id` is valid
-        Caution: Only check if the `datasourse_id` is literally a valid string.
-        No guarantee whether the id of data source exists in the database or is reachable.
+        Check if `object_id` is valid
+        Caution: Only check if the `object_id` is literally a valid string.
+        No guarantee whether the id of object exists in the database or whether it is reachable.
 
         Args:
             id (str): id
@@ -47,7 +47,7 @@ class CheckingCenter():
         Returns:
             self: return itself for a stream operation
         """
-        if datasourse_id is None or len(datasourse_id) != self.LENGTH_OF_DATASOURCE_ID:
+        if object_id is None or len(object_id) != self.LENGTH_OF_DATA_OBJECT_ID:
             raise InvalidParamError(
                 "Data source id must be a 24-character string")
         return self

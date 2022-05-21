@@ -130,7 +130,7 @@ class ProjectResource(Resource):
     @jwt_required(optional=True)
     def get(self, id):
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             project = Project.objects.get(id=id)
@@ -160,7 +160,7 @@ class ProjectResource(Resource):
         # pre-validate params
 
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             project = Project.objects.get(id=id)
@@ -188,12 +188,11 @@ class ProjectResource(Resource):
 
         return project
 
-    
     @response_wrapper
     @jwt_required()
     def delete(self, id):
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             project = Project.objects.get(id=id)

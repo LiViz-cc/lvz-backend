@@ -108,7 +108,7 @@ class DisplaySchemaResource(Resource):
         # pre-validate params
 
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             display_schema = DisplaySchema.objects.get(id=id)
@@ -140,7 +140,7 @@ class DisplaySchemaResource(Resource):
     @jwt_required(optional=True)
     def delete(self, id):
         # query project via id
-        myguard.check_literaly.datasourse_id(id)
+        myguard.check_literaly.object_id(id)
 
         try:
             display_schema = DisplaySchema.objects.get(id=id)
