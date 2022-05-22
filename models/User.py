@@ -33,6 +33,11 @@ class User(db.Document):
 # by default, set enable = 0
 # if one user againsts the rules, we need to ban it
 # just set enable = -1 (reason code)
+
+"""
+# The cascade for User is dangerous
 User.register_delete_rule(Project, 'created_by', db.CASCADE)
 User.register_delete_rule(ShareConfig, 'created_by', db.CASCADE)
+"""
+
 # TODO: what about other models? should we add cascade for them too?
