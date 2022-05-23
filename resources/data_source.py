@@ -1,6 +1,6 @@
 import datetime
 
-from errors import ForbiddenError, InvalidParamError, NotFoundError
+from errors import ForbiddenError, InvalidParamError, NotFoundError, NotMutableError
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
@@ -132,10 +132,19 @@ class DataSourceResource(Resource):
         if data_source.created_by != user:
             raise ForbiddenError()
 
+        # Forbid changing immutable field
+        for field_name in DataSource.uneditable_fields:
+            if body.get(field_name, None):
+                raise NotMutableError(DataSource.__name__, field_name)
+
+        body['modified'] = datetime.datetime.utcnow
+
         # update project
         try:
             data_source.modify(**body)
         except ValidationError as e:
+            raise InvalidParamError(e.message)
+        except LookupError as e:
             raise InvalidParamError(e.message)
 
         return data_source

@@ -10,6 +10,8 @@ class ShareConfig(db.Document):
     linked_project = db.ReferenceField("Project", required=True)
     description = db.StringField(required=True, default='', max_length=1000)
 
+    uneditable_fields = ['created', 'modified', 'created_by']
+
     # TODO: password-proteced
     """
     password_protected = db.BooleanField(required=True, default=False)

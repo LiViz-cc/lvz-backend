@@ -1,6 +1,6 @@
 import datetime
 
-from errors import ForbiddenError, InvalidParamError, NotFoundError
+from errors import ForbiddenError, InvalidParamError, NotFoundError, NotMutableError
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
@@ -180,13 +180,20 @@ class ProjectResource(Resource):
         if project.created_by != user:
             raise ForbiddenError()
 
+        # Forbid changing immutable field
+        for field_name in Project.uneditable_fields:
+            if body.get(field_name, None):
+                raise NotMutableError(Project.__name__, field_name)
+
+        body['modified'] = datetime.datetime.utcnow
+
         # update project
         try:
             project.modify(**body)
         except ValidationError as e:
             raise InvalidParamError(e.message)
-
-        # TODO update modified
+        except LookupError as e:
+            raise InvalidParamError(e.message)
 
         return project
 

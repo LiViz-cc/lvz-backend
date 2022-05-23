@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from errors import (ForbiddenError, InvalidParamError, NotFinishedYet,
-                    NotFoundError)
+                    NotFoundError, NotMutableError)
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
@@ -146,15 +146,20 @@ class ShareConfigResource(Resource):
             raise ForbiddenError(
                 "Cannot edit a share config not created by current user.")
 
+        # Forbid changing immutable field
+        for field_name in ShareConfig.uneditable_fields:
+            if body.get(field_name, None):
+                raise NotMutableError(ShareConfig.__name__, field_name)
+
         # update modified time
         body["modified"] = datetime.utcnow
-
-        # TODO: Check body before modifing
 
         # update project
         try:
             share_config.modify(**body)
         except ValidationError as e:
+            raise InvalidParamError(e.message)
+        except LookupError as e:
             raise InvalidParamError(e.message)
 
         return share_config

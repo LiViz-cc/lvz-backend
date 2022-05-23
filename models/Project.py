@@ -14,6 +14,8 @@ class Project(db.Document):
     data_source = db.ListField(db.ReferenceField('DataSource'))
     display_schema = db.ReferenceField('DisplaySchema')
     share_configs = db.ListField(db.ReferenceField('ShareConfig'))
+    
+    uneditable_fields = ['created', 'modified', 'created_by']
 
 
 # TODO: register_delete_rule for model Project

@@ -15,6 +15,8 @@ class User(db.Document):
         db.ReferenceField('Project', reverse_delete_rule=db.PULL))
     share_configs = db.ListField(
         db.ReferenceField('ShareConfig', reverse_delete_rule=db.PULL))
+    
+    uneditable_fields = ['created', 'modified']
 
     def hash_password(self):
         self.password = generate_password_hash(self.password).decode('utf8')

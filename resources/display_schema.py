@@ -6,7 +6,7 @@ from .response_wrapper import response_wrapper
 import datetime
 from models import User, DisplaySchema
 from mongoengine.errors import ValidationError, DoesNotExist
-from errors import NotFoundError, ForbiddenError, InvalidParamError, UnauthorizedError
+from errors import NotFoundError, ForbiddenError, InvalidParamError, NotMutableError, UnauthorizedError
 from .guard import myguard
 
 
@@ -126,10 +126,19 @@ class DisplaySchemaResource(Resource):
         if display_schema.created_by != user:
             raise ForbiddenError()
 
+        # Forbid changing immutable field
+        for field_name in DisplaySchema.uneditable_fields:
+            if body.get(field_name, None):
+                raise NotMutableError(DisplaySchema.__name__, field_name)
+                
+        body['modified'] = datetime.datetime.utcnow
+
         # update project
         try:
             display_schema.modify(**body)
         except ValidationError as e:
+            raise InvalidParamError(e.message)
+        except LookupError as e:
             raise InvalidParamError(e.message)
 
         # TODO update modified
