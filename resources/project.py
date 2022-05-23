@@ -26,6 +26,8 @@ class ProjectsResource(Resource):
             if args['public'].lower() == 'true':
                 query['public'] = True
 
+        # TODO: what if 'created_by' not in args? May a user get all projects?
+
         if 'created_by' in args:
             # check authorization
             user_id = get_jwt_identity()

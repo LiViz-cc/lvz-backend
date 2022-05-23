@@ -29,8 +29,10 @@ class UnauthorizedError(ServerError):
 
 
 class ForbiddenError(ServerError):
-    def __init__(self):
-        super().__init__('Forbidden', 403, 'Cannot access with given authorization.')
+    def __init__(self, detail=""):
+        if detail == "":
+            detail = 'Cannot access with given authorization.'
+        super().__init__('Forbidden', 403, detail)
 
 
 class NotFinishedYet(Exception):

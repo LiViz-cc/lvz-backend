@@ -13,7 +13,7 @@ class Project(db.Document):
     description = db.StringField(required=True, default='', max_length=1000)
     data_source = db.ListField(db.ReferenceField('DataSource'))
     display_schema = db.ReferenceField('DisplaySchema')
-    share_config = db.ListField(db.ReferenceField('ShareConfig'))
+    share_configs = db.ListField(db.ReferenceField('ShareConfig'))
 
 
 # TODO: register_delete_rule for model Project

@@ -32,7 +32,7 @@ class CheckingCenter():
             raise UnauthorizedError()
         return self
 
-    def object_id(self, object_id: str):
+    def object_id(self, object_id: str, object_name="object"):
         """
         Check if `object_id` is valid
         Caution: Only check if the `object_id` is literally a valid string.
@@ -47,9 +47,15 @@ class CheckingCenter():
         Returns:
             self: return itself for a stream operation
         """
-        if object_id is None or len(object_id) != self.LENGTH_OF_DATA_OBJECT_ID:
+
+        if object_id is None:
             raise InvalidParamError(
-                "Data source id must be a 24-character string")
+                "The {} with such id is not found.".format(object_name))
+
+        if len(object_id) != self.LENGTH_OF_DATA_OBJECT_ID:
+            raise InvalidParamError(
+                "The id of {} must be a 24-character string.".format(object_name))
+
         return self
 
     def password(self, password: str, is_new_user: bool):
