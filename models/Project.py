@@ -1,5 +1,7 @@
 from database import db
+from models.DisplaySchema import DisplaySchema
 from models.ShareConfig import ShareConfig
+from mongoengine import CASCADE
 
 
 class Project(db.Document):
@@ -13,4 +15,7 @@ class Project(db.Document):
     display_schema = db.ReferenceField('DisplaySchema')
     share_config = db.ListField(db.ReferenceField('ShareConfig'))
 
-# TODO: register_delete_rule
+
+# TODO: register_delete_rule for model Project
+Project.register_delete_rule(ShareConfig, "linked_project", CASCADE)
+Project.register_delete_rule(DisplaySchema, "linked_project", CASCADE)
