@@ -11,7 +11,6 @@ class User(db.Document):
     password = db.StringField(required=True, min_length=60, max_length=60)
     created = db.DateTimeField(required=True)
     modified = db.DateTimeField(required=True)
-    # TODO reverse_delete_rule?
     projects = db.ListField(
         db.ReferenceField('Project', reverse_delete_rule=db.PULL))
     share_configs = db.ListField(
