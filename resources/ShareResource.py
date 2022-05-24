@@ -9,7 +9,7 @@ from models import Project, User
 from models.ShareConfig import ShareConfig
 from mongoengine.errors import DoesNotExist, ValidationError
 
-from .guard import myguard
+from utils.guard import myguard
 from .response_wrapper import response_wrapper
 
 

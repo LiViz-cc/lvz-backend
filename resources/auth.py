@@ -7,7 +7,7 @@ from models import User
 from mongoengine.errors import NotUniqueError, ValidationError, DoesNotExist
 from errors import InvalidParamError, EmailAlreadyExistsError, UnauthorizedError
 from .response_wrapper import response_wrapper
-from .guard import myguard
+from utils.guard import myguard
 
 
 class SignupResource(Resource):

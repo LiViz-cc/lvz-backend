@@ -7,7 +7,7 @@ from flask_restful import Resource
 from models import DataSource, DisplaySchema, Project, User
 from mongoengine.errors import DoesNotExist, ValidationError
 
-from .guard import myguard
+from utils.guard import myguard
 from .response_wrapper import response_wrapper
 
 

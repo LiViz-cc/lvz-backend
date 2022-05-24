@@ -7,7 +7,7 @@ import datetime
 from models import User, DisplaySchema
 from mongoengine.errors import ValidationError, DoesNotExist
 from errors import NotFoundError, ForbiddenError, InvalidParamError, NotMutableError, UnauthorizedError
-from .guard import myguard
+from utils.guard import myguard
 
 
 class DisplaySchemasResource(Resource):
