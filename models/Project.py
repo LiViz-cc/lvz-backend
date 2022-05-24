@@ -1,4 +1,7 @@
 from database import db
+from models.DisplaySchema import DisplaySchema
+from models.ShareConfig import ShareConfig
+from mongoengine import CASCADE
 
 
 class Project(db.Document):
@@ -10,4 +13,11 @@ class Project(db.Document):
     description = db.StringField(required=True, default='', max_length=1000)
     data_source = db.ListField(db.ReferenceField('DataSource'))
     display_schema = db.ReferenceField('DisplaySchema')
-    share_config = db.ReferenceField('ShareConfig')
+    share_configs = db.ListField(db.ReferenceField('ShareConfig'))
+    
+    uneditable_fields = ['created', 'modified', 'created_by']
+
+
+# TODO: register_delete_rule for model Project
+Project.register_delete_rule(ShareConfig, "linked_project", CASCADE)
+Project.register_delete_rule(DisplaySchema, "linked_project", CASCADE)

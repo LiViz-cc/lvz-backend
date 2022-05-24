@@ -11,6 +11,11 @@ class InvalidParamError(ServerError):
         super().__init__('Invalid Parameter', 400, detail)
 
 
+class NotMutableError(InvalidParamError):
+    def __init__(self, class_name: str, object_name: str):
+        super().__init__('Field {} in Class {} is not mutable.'.format(object_name, class_name))
+
+
 class EmailAlreadyExistsError(ServerError):
     def __init__(self, email):
         super().__init__('Email Already Exists', 400,
@@ -29,5 +34,14 @@ class UnauthorizedError(ServerError):
 
 
 class ForbiddenError(ServerError):
-    def __init__(self):
-        super().__init__('Forbidden', 403, 'Cannot access with given authorization.')
+    def __init__(self, detail=""):
+        if detail == "":
+            detail = 'Cannot access with given authorization.'
+        super().__init__('Forbidden', 403, detail)
+
+
+class NotFinishedYet(Exception):
+    """
+    A remark for codes working in progress
+    """
+    pass
