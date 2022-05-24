@@ -10,3 +10,4 @@ class DataSource(db.Document):
     public = db.BooleanField(required=True, default=False)
     description = db.StringField(required=True, default='', max_length=1000)
     static_data = db.StringField()  # temp, data JSON
+    type = db.StringField(required=True)
