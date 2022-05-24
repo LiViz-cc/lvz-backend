@@ -1,14 +1,17 @@
 from database import db
+from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
+                                ListField, ReferenceField, StringField)
+from . import User, Project
 
 
 class DisplaySchema(db.Document):
-    name = db.StringField(required=True, max_length=50)
-    created = db.DateTimeField(required=True)
-    modified = db.DateTimeField(required=True)
-    created_by = db.ReferenceField('User')
-    public = db.BooleanField(required=True, default=False)
-    description = db.StringField(required=True, default='', max_length=1000)
-    echarts_option = db.StringField()  # temp, option JSON
-    linked_project = db.ReferenceField("Project", required=True)
+    name = StringField(required=True, max_length=50)
+    created = DateTimeField(required=True)
+    modified = DateTimeField(required=True)
+    created_by = ReferenceField(User.__name__)
+    public = BooleanField(required=True, default=False)
+    description = StringField(required=True, default='', max_length=1000)
+    echarts_option = StringField()  # temp, option JSON
+    linked_project = ReferenceField(Project.__name__, required=True)
 
     uneditable_fields = ['created', 'modified', 'created_by']

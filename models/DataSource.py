@@ -1,15 +1,19 @@
 from email.policy import default
 from database import db
+from mongoengine.fields import (
+    EmailField, StringField, DateTimeField, ListField, ReferenceField, BooleanField)
+
+from . import User
 
 
 class DataSource(db.Document):
-    name = db.StringField(required=True, max_length=50)
-    created = db.DateTimeField(required=True)
-    modified = db.DateTimeField(required=True)
-    created_by = db.ReferenceField('User')
-    public = db.BooleanField(required=True, default=False)
-    description = db.StringField(required=True, default='', max_length=1000)
-    static_data = db.StringField()  # temp, data JSON
-    type = db.StringField(required=True)
+    name = StringField(required=True, max_length=50)
+    created = DateTimeField(required=True)
+    modified = DateTimeField(required=True)
+    created_by = ReferenceField(User.__name__)
+    public = BooleanField(required=True, default=False)
+    description = StringField(required=True, default='', max_length=1000)
+    static_data = StringField()  # temp, data JSON
+    type = StringField(required=True)
+    
     uneditable_fields = ['created', 'modified', 'created_by']
-

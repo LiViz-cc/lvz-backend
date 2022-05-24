@@ -1,14 +1,18 @@
 from database import db
-from flask_bcrypt import generate_password_hash, check_password_hash
+from flask_bcrypt import check_password_hash, generate_password_hash
+from mongoengine.fields import (DateTimeField, EmailField, ListField,
+                                ReferenceField, StringField)
+
+from . import Project, User
 
 
 class ShareConfig(db.Document):
-    name = db.StringField(required=True, max_length=50)
-    created = db.DateTimeField(required=True)
-    modified = db.DateTimeField(required=True)
-    created_by = db.ReferenceField('User', required=True)
-    linked_project = db.ReferenceField("Project", required=True)
-    description = db.StringField(required=True, default='', max_length=1000)
+    name = StringField(required=True, max_length=50)
+    created = DateTimeField(required=True)
+    modified = DateTimeField(required=True)
+    created_by = ReferenceField(User.__name__, required=True)
+    linked_project = ReferenceField(Project.__name__, required=True)
+    description = StringField(required=True, default='', max_length=1000)
 
     uneditable_fields = ['created', 'modified', 'created_by']
 
