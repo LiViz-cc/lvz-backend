@@ -27,9 +27,11 @@ class User(db.Document):
     def desensitize(self):
         del self.password
 
+    """
     def __init__(self, *args, **values):
         super().__init__(*args, **values)
         self.password = generate_password_hash(self.password).decode('utf8')
+    """
 
     @classmethod
     def get_password_hash(cls, password: str) -> str:
