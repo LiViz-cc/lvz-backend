@@ -18,7 +18,7 @@ class SignupResource(Resource):
 
         # pre-validate params
         password = body.get('password', None)
-        myguard.check_literaly.password(password=password, is_new_user=True)
+        myguard.check_literaly.password(password=password, is_new=True)
 
         # construct new user object
         user = User(**body)
@@ -56,7 +56,7 @@ class LoginResource(Resource):
             raise InvalidParamError('Email (string) must be provided.')
 
         password = body.get('password', None)
-        myguard.check_literaly.password(password=password, is_new_user=False)
+        myguard.check_literaly.password(password=password, is_new=False)
 
         # query user
         try:

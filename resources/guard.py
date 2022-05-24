@@ -58,7 +58,7 @@ class CheckingCenter():
 
         return self
 
-    def password(self, password: str, is_new_user: bool):
+    def password(self, password: str, is_new: bool):
         """
         Check if `password` is valid
         Caution: Only check if the `password` is literally a valid string.
@@ -66,7 +66,7 @@ class CheckingCenter():
 
         Args:
             password (str): password
-            is_new_user (bool): True if in the registration process
+            is_new (bool): True if it is a new user or a new password for an existed user
 
         Raises:
             InvalidParamError: raises if parameter types are not correct or password is too short or too long
@@ -75,14 +75,17 @@ class CheckingCenter():
             self: return itself for a stream operation
         """
 
-        if type(is_new_user) != bool:
+        if type(is_new) != bool:
             raise InvalidParamError('"is_new_user" must be boolean.')
 
+        if password is None:
+            raise InvalidParamError('"password" cannot be null.')
+
         if type(password) != str:
-            raise InvalidParamError('Password (string) must be provided.')
+            raise InvalidParamError('"password" must be a string.')
 
         # TODO more rules, e.g. special character limit, complexity level, etc.
-        if is_new_user:
+        if is_new:
             if len(password) < self.MIN_LENGTH_OF_PASSWORD or len(password) > self.MAX_LENGTH_OF_PASSWORD:
                 raise InvalidParamError(
                     'Password length must between 6 and 20 (included).')

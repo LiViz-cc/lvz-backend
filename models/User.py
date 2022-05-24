@@ -15,7 +15,7 @@ class User(db.Document):
         db.ReferenceField('Project', reverse_delete_rule=db.PULL))
     share_configs = db.ListField(
         db.ReferenceField('ShareConfig', reverse_delete_rule=db.PULL))
-    
+
     uneditable_fields = ['created', 'modified']
 
     def hash_password(self):
@@ -26,6 +26,23 @@ class User(db.Document):
 
     def desensitize(self):
         del self.password
+
+    def __init__(self, *args, **values):
+        super().__init__(*args, **values)
+        self.password = generate_password_hash(self.password).decode('utf8')
+
+    @classmethod
+    def get_password_hash(cls, password: str) -> str:
+        """
+        Please confirm the password is valid before calling this method
+
+        Args:
+            password (str): password
+
+        Returns:
+            hashed_password (str): hashed password
+        """
+        return generate_password_hash(password).decode('utf8')
 
 
 # delete user created projects when delete user
