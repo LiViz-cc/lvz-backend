@@ -13,17 +13,17 @@ class ShareConfig(db.Document):
     created_by = ReferenceField(User.__name__, required=True)
     linked_project = ReferenceField(Project.__name__, required=True)
     description = StringField(required=True, default='', max_length=1000)
+    password_protected = db.BooleanField(required=True)
+    password = db.StringField(min_length=60, max_length=60)
 
     uneditable_fields = ['created', 'modified', 'created_by']
-
-    # TODO: password-proteced
-    """
-    password_protected = db.BooleanField(required=True, default=False)
-    password = db.StringField(required=True, min_length=60, max_length=60)
 
     def hash_password(self):
         self.password = generate_password_hash(self.password).decode('utf8')
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
-    """
+
+    def desensitize(self):
+        if hasattr(self, 'password'):
+            del self.password
