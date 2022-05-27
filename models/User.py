@@ -31,7 +31,8 @@ class User(db.Document):
         return check_password_hash(self.password, password)
 
     def desensitize(self):
-        del self.password
+        if hasattr(self, 'password'):
+            del self.password
 
     """
     def __init__(self, *args, **values):
@@ -59,4 +60,3 @@ class User(db.Document):
 # by default, set enable = 0
 # if one user againsts the rules, we need to ban it
 # just set enable = -1 (reason code)
-
