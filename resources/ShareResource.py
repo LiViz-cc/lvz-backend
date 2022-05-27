@@ -124,7 +124,7 @@ class ShareConfigsResource(Resource):
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-        # update user projects
+        # update user's and project's reference to share_config
         try:
             user.update(push__share_configs=share_config)
             project.update(push__share_configs=share_config)

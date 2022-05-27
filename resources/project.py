@@ -118,7 +118,7 @@ class ProjectsResource(Resource):
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-        # update user projects
+        # update user's reference to project
         try:
             user.update(push__projects=project)
         except ValidationError as e:

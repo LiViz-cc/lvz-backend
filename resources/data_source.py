@@ -67,11 +67,18 @@ class DataSourcesResource(Resource):
             user = User.objects.get(id=user_id)
         except DoesNotExist:
             raise NotFoundError('user', 'id={}'.format(user_id))
+        user: User
         data_source.created_by = user
 
         # save new data source
         try:
             data_source.save()
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+        # update user's and project's reference to share_config
+        try:
+            user.update(push__projects=data_source)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
