@@ -3,15 +3,16 @@ from logging import exception
 
 from errors import (ForbiddenError, InvalidParamError, NotFinishedYet,
                     NotFoundError, NotMutableError)
-from flask import request
+from flask import Request, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from models import Project, User
 from models.ShareConfig import ShareConfig
 from mongoengine.errors import DoesNotExist, ValidationError
-
 from utils.guard import myguard
+
 from .response_wrapper import response_wrapper
+from werkzeug.exceptions import BadRequest
 
 
 class ShareConfigsResource(Resource):
@@ -47,19 +48,16 @@ class ShareConfigsResource(Resource):
 
         # query projects with query dict
         share_configs = ShareConfig.objects(**query)
-        print(type(share_configs))
 
-        # TODO: do not work with QuerySet???
+        # query set cannot be modified
+        # create a new list for return
+        share_configs_list = []
+
         for share_config in share_configs:
-            print(type(share_config))
             share_config.desensitize()
-            try:
-                password = getattr(share_config, 'password', None)
-                print(password)
-            except Exception:
-                pass
+            share_configs_list.append(share_config)
 
-        return share_configs
+        return share_configs_list
 
     @response_wrapper
     @jwt_required()
@@ -137,16 +135,50 @@ class ShareConfigsResource(Resource):
 
 
 class ShareConfigResource(Resource):
+    """
+    @classmethod
+    def check_password_protected(cls, share_config: ShareConfig, request: Request):
+        if share_config is None or not isinstance(share_config, ShareConfig):
+            raise InvalidParamError(
+                'Input "share_config" is None or not a type of ShareConfig.')
+
+        if not share_config.password_protected:
+            return
+
+        if request is None or not isinstance(request, Request):
+            raise InvalidParamError(
+                'Input "request" is None or not a type of Request.')
+
+        try:
+            body = request.get_json()
+            password = body.get('password')
+        except BadRequest:
+            # request.get_json() might return BadRequest
+            raise InvalidParamError(
+                "This share config is password protected. Please provide password in the message body.")
+
+        myguard.check_literaly.password(password=password, is_new=False)
+        if not share_config.check_password(password):
+            raise ForbiddenError('Password is not correct.')
+    """
+
     @response_wrapper
     @jwt_required(optional=True)
     def get(self, id):
         myguard.check_literaly.object_id(id)
 
+        # get share config from database
         try:
             share_config = ShareConfig.objects.get(id=id)
         except DoesNotExist:
             raise NotFoundError('share_configs', 'id={}'.format(id))
 
+        """
+        # check if password-protected
+        ShareConfigResource.check_password_protected(share_config, request)
+        """
+
+        # remove password field for return
         share_config.desensitize()
         return share_config
 
@@ -176,6 +208,11 @@ class ShareConfigResource(Resource):
             raise ForbiddenError(
                 "Cannot edit a share config not created by current user.")
 
+        """
+        # check if password-protected
+        ShareConfigResource.check_password_protected(share_config, request)
+        """
+
         # Forbid changing immutable field
         for field_name in ShareConfig.uneditable_fields:
             if body.get(field_name, None):
@@ -192,10 +229,11 @@ class ShareConfigResource(Resource):
         except LookupError as e:
             raise InvalidParamError(e.message)
 
+        share_config.desensitize()
         return share_config
 
     @response_wrapper
-    @jwt_required(optional=True)
+    @jwt_required()
     def delete(self, id):
         # TODO: not finished
 
@@ -217,6 +255,11 @@ class ShareConfigResource(Resource):
             raise NotFoundError('user', 'id={}'.format(user_id))
         if share_config.created_by != user:
             raise ForbiddenError()
+            
+        """
+        # check if password-protected
+        ShareConfigResource.check_password_protected(share_config, request)
+        """
 
         # delete project
         share_config.delete()

@@ -1,8 +1,8 @@
-from flask import Response
-from mongoengine import Document, EmbeddedDocument, QuerySet
-from flask_jwt_extended.exceptions import NoAuthorizationError
+import json
+
 from errors import ServerError
-import json, bson
+from flask import Response
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 
 def response_wrapper(func):
@@ -19,7 +19,7 @@ def response_wrapper(func):
     #         return doc
     #     else:
     #         return obj
-    
+
     # class MongoJsonEncoder(json.JSONEncoder):
     #     def default(self, obj):
     #         if isinstance(obj, bson.ObjectId):
@@ -32,19 +32,20 @@ def response_wrapper(func):
         try:
             # get response
             response = func(*args, **kwargs)
+            response_json: str
 
             if type(response) == dict:
-                # wrap simple dict response
-                return Response(json.dumps(response), mimetype='application/json', status=200)
+                response_json = json.dumps(response)
 
-            # got Document or Document List (QuerySet)
-            # # first convert to dict
-            # response_dict = to_dict(response)
-            # # then dump to json string
-            # response_json = json.dumps(response_dict, cls=MongoJsonEncoder)
-            # # finally wrap json string response
-            # return Response(response_json, mimetype='application/json', status=200)
-            return Response(response.to_json(), mimetype='application/json', status=200)
+            elif type(response) == list:
+                # TODO: refine the convertion from List of Document to JSON
+                response_json_list = (x.to_json() for x in response)
+                response_json = '[' + ','.join(response_json_list) + ']'
+
+            else:
+                response_json = response.to_json()
+
+            return Response(response_json, mimetype='application/json', status=200)
         except NoAuthorizationError as e:
             # wrap jwt authorization error
             return {'title': 'Forbidden', 'status': 403, 'detail': 'Cannot access with given authorization.'}, 403
