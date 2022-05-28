@@ -10,6 +10,7 @@ from models import Project, User
 from models.ShareConfig import ShareConfig
 from mongoengine.errors import DoesNotExist, ValidationError
 from utils.guard import myguard
+from utils.share_config_center import ShareConfigCenter
 
 from .response_wrapper import response_wrapper
 from werkzeug.exceptions import BadRequest
@@ -135,133 +136,52 @@ class ShareConfigsResource(Resource):
 
 
 class ShareConfigResource(Resource):
-    """
-    @classmethod
-    def check_password_protected(cls, share_config: ShareConfig, request: Request):
-        if share_config is None or not isinstance(share_config, ShareConfig):
-            raise InvalidParamError(
-                'Input "share_config" is None or not a type of ShareConfig.')
-
-        if not share_config.password_protected:
-            return
-
-        if request is None or not isinstance(request, Request):
-            raise InvalidParamError(
-                'Input "request" is None or not a type of Request.')
+    def get_current_user(self) -> User:
+        # check authorization
+        user_id = get_jwt_identity()
+        myguard.check_literaly.user_id(user_id)
 
         try:
-            body = request.get_json()
-            password = body.get('password')
-        except BadRequest:
-            # request.get_json() might return BadRequest
-            raise InvalidParamError(
-                "This share config is password protected. Please provide password in the message body.")
+            user = User.objects.get(id=user_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(user_id))
 
-        myguard.check_literaly.password(password=password, is_new=False)
-        if not share_config.check_password(password):
-            raise ForbiddenError('Password is not correct.')
-    """
+        return user
 
     @response_wrapper
     @jwt_required(optional=True)
     def get(self, id):
-        myguard.check_literaly.object_id(id)
+        share_config_center = ShareConfigCenter()
 
-        # get share config from database
-        try:
-            share_config = ShareConfig.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('share_configs', 'id={}'.format(id))
+        # get password
+        args = request.args
+        password = args.get('password')
 
-        """
-        # check if password-protected
-        ShareConfigResource.check_password_protected(share_config, request)
-        """
-
-        # remove password field for return
-        share_config.desensitize()
-        return share_config
+        return share_config_center.get_with_id(id, password=password)
 
     @response_wrapper
     @jwt_required()
     def put(self, id):
-        # get request body dict
+        current_user = self.get_current_user()
+        share_config_center = ShareConfigCenter()
+
+        # get password
+        args = request.args
+        password = args.get('password')
+
+        # get message body
         body = request.get_json()
 
-        # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            share_config = ShareConfig.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('share_config', 'id={}'.format(id))
-
-        # check authorization
-        user_id = get_jwt_identity()
-        myguard.check_literaly.user_id(user_id)
-
-        try:
-            user = User.objects.get(id=user_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(user_id))
-        if share_config.created_by != user:
-            raise ForbiddenError(
-                "Cannot edit a share config not created by current user.")
-
-        """
-        # check if password-protected
-        ShareConfigResource.check_password_protected(share_config, request)
-        """
-
-        # Forbid changing immutable field
-        for field_name in ShareConfig.uneditable_fields:
-            if body.get(field_name, None):
-                raise NotMutableError(ShareConfig.__name__, field_name)
-
-        # update modified time
-        body["modified"] = datetime.utcnow
-
-        # update project
-        try:
-            share_config.modify(**body)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-        except LookupError as e:
-            raise InvalidParamError(e.message)
-
-        share_config.desensitize()
-        return share_config
+        return share_config_center.put_with_id(id, current_user, password=password, body=body)
 
     @response_wrapper
     @jwt_required()
     def delete(self, id):
-        # TODO: not finished
+        current_user = self.get_current_user()
+        share_config_center = ShareConfigCenter()
 
-        # query project via id
-        myguard.check_literaly.object_id(id)
+        # get password
+        args = request.args
+        password = args.get('password')
 
-        try:
-            share_config = ShareConfig.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('share_config', 'id={}'.format(id))
-
-        # check authorization
-        user_id = get_jwt_identity()
-        myguard.check_literaly.user_id(user_id)
-
-        try:
-            user = User.objects.get(id=user_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(user_id))
-        if share_config.created_by != user:
-            raise ForbiddenError()
-
-        """
-        # check if password-protected
-        ShareConfigResource.check_password_protected(share_config, request)
-        """
-
-        # delete project
-        share_config.delete()
-
-        return {}
+        return share_config_center.delete_with_id(id=id, user=current_user, password=password)

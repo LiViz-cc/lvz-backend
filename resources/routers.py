@@ -1,7 +1,7 @@
 from flask_restful import Api
 
 from models.ShareConfig import ShareConfig
-from resources.ShareResource import ShareConfigPasswordResource, ShareConfigResource, ShareConfigsResource
+from resources.ShareResource import ShareConfigResource, ShareConfigsResource
 from .auth import LoginResource, SignupResource
 from .data_source import DataSourceResource, DataSourcesResource
 from .display_schema import DisplaySchemaResource, DisplaySchemasResource

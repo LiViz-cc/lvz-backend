@@ -52,6 +52,10 @@ class CheckingCenter():
             raise InvalidParamError(
                 "The {} with such id is not found.".format(object_name))
 
+        if not isinstance(object_id, str):
+            raise InvalidParamError(
+                "The {} is not an instance of String.".format(object_name))
+
         if len(object_id) != self.LENGTH_OF_DATA_OBJECT_ID:
             raise InvalidParamError(
                 "The id of {} must be a 24-character string.".format(object_name))
