@@ -4,7 +4,7 @@ from errors import ForbiddenError, InvalidParamError, NotFoundError, NotMutableE
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
-from models import DataSource, User
+from models import DataSource, Project, User
 from mongoengine.errors import DoesNotExist, ValidationError
 
 from utils.guard import myguard
@@ -76,9 +76,9 @@ class DataSourcesResource(Resource):
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-        # update user's and project's reference to share_config
+        # update user's reference to share_config
         try:
-            user.update(push__projects=data_source)
+            user.update(push__data_sources=data_source)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 

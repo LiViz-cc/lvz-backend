@@ -4,6 +4,7 @@ from database import db
 from flask_bcrypt import check_password_hash, generate_password_hash
 from mongoengine.fields import (
     EmailField, StringField, DateTimeField, ListField, ReferenceField)
+from models.DataSource import DataSource
 
 from models.ShareConfig import ShareConfig
 
@@ -19,8 +20,8 @@ class User(db.Document):
     modified = DateTimeField(required=True)
     projects = ListField(
         ReferenceField(Project.__name__, reverse_delete_rule=db.PULL))
-    share_configs = ListField(
-        ReferenceField(ShareConfig.__name__, reverse_delete_rule=db.PULL))
+    data_sources = ListField(
+        ReferenceField(DataSource.__name__, reverse_delete_rule=db.PULL))
 
     uneditable_fields = ['created', 'modified']
 
