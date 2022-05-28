@@ -118,7 +118,7 @@ class ShareConfigsResource(Resource):
         # set created by
         share_config.created_by = user
 
-        # save new project
+        # save share config
         try:
             share_config.save()
         except ValidationError as e:
@@ -185,3 +185,33 @@ class ShareConfigResource(Resource):
         password = args.get('password')
 
         return share_config_center.delete_with_id(id=id, user=current_user, password=password)
+
+
+class ShareConfigPasswordResource(Resource):
+    def get_current_user(self) -> User:
+        # check authorization
+        user_id = get_jwt_identity()
+        myguard.check_literaly.user_id(user_id)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(user_id))
+
+        return user
+
+    @response_wrapper
+    @jwt_required()
+    def post(self, id):
+        current_user = self.get_current_user()
+        share_config_center = ShareConfigCenter()
+
+        # get old password
+        args = request.args
+        old_password = args.get('password')
+
+        # get message body
+        body = request.get_json()
+        new_password = body.get('password', None)
+
+        return share_config_center.change_password(id=id, user=current_user, old_password=old_password, new_password=new_password)
