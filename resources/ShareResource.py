@@ -255,7 +255,7 @@ class ShareConfigResource(Resource):
             raise NotFoundError('user', 'id={}'.format(user_id))
         if share_config.created_by != user:
             raise ForbiddenError()
-            
+
         """
         # check if password-protected
         ShareConfigResource.check_password_protected(share_config, request)

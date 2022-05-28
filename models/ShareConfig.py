@@ -16,7 +16,10 @@ class ShareConfig(db.Document):
     password_protected = db.BooleanField(required=True)
     password = db.StringField(min_length=60, max_length=60)
 
-    uneditable_fields = ['created', 'modified', 'created_by']
+    # fields that are not editable by user
+    # notice: these fields are still mutable
+    uneditable_fields = ['created', 'modified',
+                         'created_by', 'password_protected', 'password']
 
     def hash_password(self):
         self.password = generate_password_hash(self.password).decode('utf8')
