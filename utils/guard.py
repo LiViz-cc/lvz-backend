@@ -80,7 +80,7 @@ class CheckingCenter():
         """
 
         if type(is_new) != bool:
-            raise InvalidParamError('"is_new_user" must be boolean.')
+            raise InvalidParamError('"is_new" must be boolean.')
 
         if password is None:
             raise InvalidParamError('"password" cannot be null.')

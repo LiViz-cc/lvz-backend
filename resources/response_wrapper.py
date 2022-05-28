@@ -53,7 +53,6 @@ def response_wrapper(func):
             # wrap server error with given status and error title, detail
             return {'title': e.title, 'status': e.status, 'detail': e.detail}, e.status
         except Exception as e:
-            print(e)
             # wrap other exceptions with status 500
             return {'title': 'Internal Server Error', 'status': 500, 'detail': str(e)}, 500
     return wrapper

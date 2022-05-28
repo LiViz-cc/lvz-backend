@@ -1,6 +1,6 @@
 import datetime
 
-from errors import ForbiddenError, InvalidParamError, NotFoundError
+from errors import ForbiddenError, InvalidParamError, NotFinishedYet, NotFoundError
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
@@ -32,9 +32,14 @@ class UserResource(Resource):
         user.desensitize()
         return user
 
+
+class UserPasswordResource(Resource):
     @response_wrapper
     @jwt_required()
-    def put(self, id):
+    def post(self, id):
+        # get request args
+        args = request.args
+
         # get request body dict
         body = request.get_json()
 
@@ -55,20 +60,19 @@ class UserResource(Resource):
             raise ForbiddenError()
 
         # check if old_password is as same as the password in the database
-        old_password = body.get('old_password', None)
+        old_password = args.get('password', None)
         myguard.check_literaly.password(old_password, is_new=False)
         if not user.check_password(old_password):
             raise ForbiddenError("Password is wrong.")
 
         # check if new_password valid
-        new_password = body.get('new_password', None)
+        new_password = body.get('password', None)
         myguard.check_literaly.password(new_password, is_new=True)
 
         # Forbid changing immutable field
         modifing_dict = {}
         # add password into dict
-        modifing_dict['password'] = User.get_password_hash(
-            body['new_password'])
+        modifing_dict['password'] = User.get_password_hash(new_password)
         modifing_dict['modified'] = datetime.datetime.utcnow
 
         # update project

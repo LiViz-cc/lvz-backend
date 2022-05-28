@@ -87,7 +87,7 @@ class ShareConfigsResource(Resource):
         except DoesNotExist:
             raise NotFoundError('project', 'id={}'.format(project_name))
 
-        if project.created_by.id != user.id:
+        if project.created_by != user:
             raise ForbiddenError(
                 "Cannot share a project not created by current user.")
 

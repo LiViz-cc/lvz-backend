@@ -2,13 +2,10 @@ from dataclasses import fields
 
 from database import db
 from flask_bcrypt import check_password_hash, generate_password_hash
-from mongoengine.fields import (
-    EmailField, StringField, DateTimeField, ListField, ReferenceField)
-from models.DataSource import DataSource
+from mongoengine.fields import (DateTimeField, EmailField, ListField,
+                                ReferenceField, StringField)
 
-from models.ShareConfig import ShareConfig
-
-from . import Project
+from . import DataSource, Project, ShareConfig
 
 
 class User(db.Document):
