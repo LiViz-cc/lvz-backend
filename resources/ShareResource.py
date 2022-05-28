@@ -157,7 +157,7 @@ class ShareConfigResource(Resource):
         args = request.args
         password = args.get('password')
 
-        return share_config_center.get_with_id(id, password=password)
+        return share_config_center.get_by_id(id, password=password)
 
     @response_wrapper
     @jwt_required()
@@ -172,7 +172,7 @@ class ShareConfigResource(Resource):
         # get message body
         body = request.get_json()
 
-        return share_config_center.put_with_id(id, current_user, password=password, body=body)
+        return share_config_center.put_by_id(id, current_user, password=password, body=body)
 
     @response_wrapper
     @jwt_required()
@@ -184,7 +184,7 @@ class ShareConfigResource(Resource):
         args = request.args
         password = args.get('password')
 
-        return share_config_center.delete_with_id(id=id, user=current_user, password=password)
+        return share_config_center.delete_by_id(id=id, user=current_user, password=password)
 
 
 class ShareConfigPasswordResource(Resource):

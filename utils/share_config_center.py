@@ -31,7 +31,7 @@ class ShareConfigCenter:
         #         raise InvalidParamError(
         #             "This share config is not password-protected. Do not provide password.")
 
-    def get_with_id(self, id: str, password: str) -> ShareConfig:
+    def _get_share_config_by_id(self, id) -> ShareConfig:
         myguard.check_literaly.object_id(id)
 
         # get share config from database
@@ -39,6 +39,11 @@ class ShareConfigCenter:
             share_config = ShareConfig.objects.get(id=id)
         except DoesNotExist:
             raise NotFoundError('share_configs', 'id={}'.format(id))
+        return share_config
+
+    def get_by_id(self, id: str, password: str) -> ShareConfig:
+        # query project via id
+        share_config = self._get_share_config_by_id(id)
 
         # check if password-protected
         self.check_password_protected(share_config, password)
@@ -47,14 +52,9 @@ class ShareConfigCenter:
         share_config.desensitize()
         return share_config
 
-    def put_with_id(self, id: str, user, password: str, body: dict) -> ShareConfig:
+    def put_by_id(self, id: str, user, password: str, body: dict) -> ShareConfig:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            share_config = ShareConfig.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('share_config', 'id={}'.format(id))
+        share_config = self._get_share_config_by_id(id)
 
         if share_config.created_by != user:
             raise ForbiddenError(
@@ -82,14 +82,9 @@ class ShareConfigCenter:
         share_config.desensitize()
         return share_config
 
-    def delete_with_id(self, id: str, user, password: str) -> dict:
+    def delete_by_id(self, id: str, user, password: str) -> dict:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            share_config = ShareConfig.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('share_config', 'id={}'.format(id))
+        share_config = self._get_share_config_by_id(id)
 
         if share_config.created_by != user:
             raise ForbiddenError()
@@ -104,13 +99,7 @@ class ShareConfigCenter:
 
     def change_password(self, id: str, user, old_password: str, new_password: str) -> ShareConfig:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            share_config = ShareConfig.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('share_config', 'id={}'.format(id))
-        share_config: ShareConfig
+        share_config = self._get_share_config_by_id(id)
 
         if share_config.created_by != user:
             raise ForbiddenError()
