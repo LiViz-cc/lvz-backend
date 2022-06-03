@@ -24,6 +24,7 @@ class ShareConfig(db.Document):
     def hash_password(self):
         self.password = generate_password_hash(self.password).decode('utf8')
 
+    # TODO: CHANGE TO PLAIN TEXT
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
