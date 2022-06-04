@@ -109,7 +109,7 @@ class ShareConfigCenter:
 
         myguard.check_literaly.password(new_password, is_new=True)
         share_config['password'] = new_password
-        share_config.hash_password()
+        # share_config.hash_password()
         share_config['modified'] = datetime.utcnow
 
         # save share config

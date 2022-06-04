@@ -107,8 +107,8 @@ class ShareConfigsResource(Resource):
         # construct new project object
         share_config = ShareConfig(**body)
 
-        if password_protected:
-            share_config.hash_password()
+        # if password_protected:
+        #     share_config.hash_password()
 
         # set time
         curr_time = datetime.utcnow
