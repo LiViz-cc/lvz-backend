@@ -1,185 +1,62 @@
-import datetime
 
-from errors import ForbiddenError, InvalidParamError, NotFoundError, NotMutableError
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
-from models import DataSource, Project, User
-from mongoengine.errors import DoesNotExist, ValidationError
-
+from services.data_source_service import DataSourcesService
 from utils.guard import myguard
+
 from .response_wrapper import response_wrapper
 
 
 class DataSourcesResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.data_sources_service = DataSourcesService()
+
     @response_wrapper
     @jwt_required(optional=True)
     def get(self):
         # get request args dict
         args = request.args
+        user_id = get_jwt_identity()
 
-        # validate args and construct query dict
-        query = {}
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                query['public'] = False
-            if args['public'].lower() == 'true':
-                query['public'] = True
-        if 'created_by' in args:
-            # check authorization
-            user_id = get_jwt_identity()
-            myguard._check.user_id(user_id)
-
-            try:
-                user = User.objects.get(id=user_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(user_id))
-            if args['created_by'] != str(user.id):
-                raise ForbiddenError()
-            query['created_by'] = user
-
-        # query data sources with query dict
-        data_sources = DataSource.objects(**query)
-
-        return data_sources
+        return self.data_sources_service.get_data_sources(args, user_id)
 
     @response_wrapper
     @jwt_required()
     def post(self):
         # get request body dict
         body = request.get_json()
-
-        # pre-validate params
-
-        # construct new data source object
-        data_source = DataSource(**body)
-
-        # set time
-        curr_time = datetime.datetime.utcnow
-        data_source.created = curr_time
-        data_source.modified = curr_time
-
-        # set created by
         user_id = get_jwt_identity()
-        myguard._check.user_id(user_id)
 
-        try:
-            user = User.objects.get(id=user_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(user_id))
-        user: User
-        data_source.created_by = user
-
-        # save new data source
-        try:
-            data_source.save()
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
-        # update user's reference to share_config
-        try:
-            user.update(push__data_sources=data_source)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
-        return data_source
+        return self.data_sources_service.create_data_source(body, user_id)
 
 
 class DataSourceResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.data_sources_service = DataSourcesService()
+
     @response_wrapper
     @jwt_required(optional=True)
     def get(self, id):
         myguard._check.object_id(id)
+        user_id = get_jwt_identity()
 
-        # query data source via id
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data source', 'id={}'.format(id))
-
-        # check authorization
-        if not data_source.public:
-            user_id = get_jwt_identity()
-            myguard._check.user_id(user_id)
-
-            try:
-                user = User.objects.get(id=user_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(user_id))
-            if not data_source.created_by == user:
-                raise ForbiddenError()
-
-        return data_source
+        return self.data_sources_service.get_data_source_by_id(id, user_id)
 
     @response_wrapper
     @jwt_required(optional=True)
     def put(self, id):
         # get request body dict
         body = request.get_json()
-
-        # pre-validate params
-
-        # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data_source', 'id={}'.format(id))
-
-        # check authorization
         user_id = get_jwt_identity()
-        myguard.check_literaly.user_id(user_id)
 
-        try:
-            user = User.objects.get(id=user_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(user_id))
-
-        if data_source.created_by != user:
-            raise ForbiddenError()
-
-        # Forbid changing immutable field
-        for field_name in DataSource.uneditable_fields:
-            if body.get(field_name, None):
-                raise NotMutableError(DataSource.__name__, field_name)
-
-        body['modified'] = datetime.datetime.utcnow
-
-        # update project
-        try:
-            data_source.modify(**body)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-        except LookupError as e:
-            raise InvalidParamError(e.message)
-
-        return data_source
+        return self.data_sources_service.edit_data_source(id, body, user_id)
 
     @response_wrapper
     @jwt_required(optional=True)
     def delete(self, id):
-        # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data_source', 'id={}'.format(id))
-
-        # check authorization
         user_id = get_jwt_identity()
-        myguard.check_literaly.user_id(user_id)
 
-        try:
-            user = User.objects.get(id=user_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(user_id))
-
-        if data_source.created_by != user:
-            raise ForbiddenError()
-
-        # delete project
-        data_source.delete()
-
-        return {}
+        return self.data_sources_service.delete_data_source(id, user_id)
