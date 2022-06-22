@@ -28,7 +28,7 @@ class CsvFormatter(logging.Formatter):
         return data.strip()
 
 
-def get_logger():
+def _generate_logger(name=__name__, console_level=logging.WARNING, file_level=logging.INFO):
     # create directory if not exists
     log_directory = os.path.abspath(os.path.join(
         os.path.dirname(__file__), os.pardir, "log"))
@@ -38,50 +38,27 @@ def get_logger():
     # create log file if not exists
     filename = "{}_log.csv".format(datetime.date.today())
     filepath = os.path.join(log_directory, filename)
+
+    is_new_file = not os.path.exists(filepath)
     f = open(filepath, "a")
+    if is_new_file:
+        f.write('asctime,mills,levelname,filename,funcName,lineno,message\n')
     f.close()
 
-    # # Log file export
-    # logging.basicConfig(level=logging.INFO,
-    #                     filename=filepath,
-    #                     datefmt='%Y/%m/%d %H:%M:%S')
-
-    # # logging.basicConfig(level=logging.DEBUG,
-    # #                     filename=filepath,
-    # #                     datefmt='%Y/%m/%d %H:%M:%S',
-    # #                     format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
-
-    # logger = logging.getLogger(__name__)
-
-    # # Set file export format
-    # logging.root.handlers[0].setFormatter(CsvFormatter())
-
-    # # Logs export to concole
-    # chlr = logging.StreamHandler()
-    
-
-    # # chlr.setLevel('DEBUG')
-    # chlr.setLevel('INFO')
-    # logger.addHandler(chlr)
-
-    # # Set concole export format
-    # format_concole = logging.Formatter('[%(levelname)s] %(message)s')
-    # chlr.setFormatter(format_concole)
-
-    # import logging
-
     # Create a custom logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(name)
 
     # Create handlers
     c_handler = logging.StreamHandler()
     f_handler = logging.FileHandler(filepath)
-    c_handler.setLevel(logging.INFO)
-    f_handler.setLevel(logging.INFO)
+    c_handler.setLevel(console_level)
+    f_handler.setLevel(file_level)
 
     # Create formatters and add it to handlers
-    c_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
-    f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    c_format = logging.Formatter(
+        '%(asctime)s - %(levelname)s\n  - %(filename)s - %(funcName)s - %(lineno)d\n  - %(message)s')
+    f_format = logging.Formatter(
+        '%(asctime)s,%(levelname)s,%(filename)s,%(funcName)s,%(lineno)d,%(message)s')
     c_handler.setFormatter(c_format)
     f_handler.setFormatter(f_format)
 
@@ -89,13 +66,19 @@ def get_logger():
     logger.addHandler(c_handler)
     logger.addHandler(f_handler)
 
-    logger.warning('This is a warning')
-    logger.error('This is an error')
+    logger.setLevel(min(console_level, file_level))
+
+    # logger.warning('This is a warning')
+    # logger.error('This is an error')
 
     return logger
 
 
-logger = get_logger()
+_logger = _generate_logger()
+
+
+def get_logger():
+    return _logger
 
 
 class SilentLogger:
@@ -103,8 +86,8 @@ class SilentLogger:
     A logger ignoring only `info`
     '''
 
-    def __init__(self, logger) -> None:
-        self.logger = logger
+    def __init__(self) -> None:
+        self.logger = _generate_logger('SilentLogger')
 
     def info(self, *args, **kargs):
         pass
@@ -116,4 +99,4 @@ class SilentLogger:
         self.logger.error(*args, **kargs)
 
 
-silent_logger = SilentLogger(logger)
+silent_logger = SilentLogger()

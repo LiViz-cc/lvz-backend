@@ -8,15 +8,21 @@ from models import DataSource, DisplaySchema, Project, User
 from mongoengine.errors import DoesNotExist, ValidationError
 
 from utils.guard import myguard
+from utils.logger import get_logger
 from .response_wrapper import response_wrapper
+
+logger = get_logger()
 
 
 class ProjectsResource(Resource):
+
     @response_wrapper
     @jwt_required(optional=True)
     def get(self):
         # get request args dict
         args = request.args
+
+        logger.info('GET all projects with args {}'.format(args))
 
         # validate args and construct query dict
         query = {}
@@ -52,6 +58,8 @@ class ProjectsResource(Resource):
         # get request body dict
         body = request.get_json()
         body: dict
+
+        logger.info('POST project with body {}'.format(body))
 
         # get creator user
         user_id = get_jwt_identity()

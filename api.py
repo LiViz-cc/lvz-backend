@@ -10,7 +10,6 @@ from flask_restful import Api
 
 from database import initialize_db
 from resources import initialize_routes
-from utils.logger import logger
 
 # load environment variables from .env
 load_dotenv()
