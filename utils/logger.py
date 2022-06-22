@@ -77,7 +77,7 @@ def _generate_logger(name=__name__, console_level=logging.WARNING, file_level=lo
 _logger = _generate_logger()
 
 
-def get_logger():
+def get_the_logger():
     return _logger
 
 

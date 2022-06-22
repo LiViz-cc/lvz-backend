@@ -8,10 +8,10 @@ from models import DataSource, DisplaySchema, Project, User
 from mongoengine.errors import DoesNotExist, ValidationError
 
 from utils.guard import myguard
-from utils.logger import get_logger
+from utils.logger import get_the_logger
 from .response_wrapper import response_wrapper
 
-logger = get_logger()
+logger = get_the_logger()
 
 
 class ProjectsResource(Resource):
