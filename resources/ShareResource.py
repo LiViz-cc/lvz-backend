@@ -1,3 +1,5 @@
+from asyncio.log import logger
+from cmath import log
 from datetime import datetime
 from logging import exception
 
@@ -58,6 +60,7 @@ class ShareConfigsResource(Resource):
             share_config.desensitize()
             share_configs_list.append(share_config)
 
+        logger.info("Query processed. Detail: {}".format(query))
         return share_configs_list
 
     @response_wrapper
