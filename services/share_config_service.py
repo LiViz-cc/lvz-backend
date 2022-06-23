@@ -1,16 +1,22 @@
 
+from asyncio.log import logger
 from datetime import datetime
+from typing import List
 
 from errors import (ForbiddenError, InvalidParamError, NotFinishedYet,
                     NotFoundError, NotMutableError)
-
+from models import Project, User
 from models.ShareConfig import ShareConfig
 from mongoengine.errors import DoesNotExist, ValidationError
-
+from utils import get_current_user, get_the_logger, myguard
 from utils.guard import myguard
+from utils.logger import get_the_logger
 
 
-class ShareConfigCenter:
+logger = get_the_logger()
+
+
+class ShareConfigService:
     def check_password_protected(self, share_config: ShareConfig, password: str) -> None:
         if share_config is None or not isinstance(share_config, ShareConfig):
             raise InvalidParamError(
@@ -41,6 +47,27 @@ class ShareConfigCenter:
             raise NotFoundError('share_configs', 'id={}'.format(id))
         return share_config
 
+    def get_share_configs(self, args, user) -> List[ShareConfig]:
+        # TODO: accept query
+
+        # validate args and construct query dict
+        query = {}
+        query['created_by'] = user
+
+        # query projects with query dict
+        share_configs = ShareConfig.objects(**query)
+
+        # query set cannot be modified
+        # create a new list for return
+        share_configs_list = []
+
+        for share_config in share_configs:
+            share_config.desensitize()
+            share_configs_list.append(share_config)
+
+        logger.info("Query processed. Detail: {}".format(query))
+        return share_configs_list
+
     def get_by_id(self, id: str, password: str) -> ShareConfig:
         # query project via id
         share_config = self._get_share_config_by_id(id)
@@ -49,6 +76,57 @@ class ShareConfigCenter:
         self.check_password_protected(share_config, password)
 
         # remove password field for return
+        share_config.desensitize()
+        return share_config
+
+    def create_share_config(self, body: dict, user: User, project_name: str, password_protected: bool, password: str):
+        myguard.check_literaly.object_id(
+            project_name, object_name="linked_project")
+
+        try:
+            project = Project.objects.get(id=project_name)
+        except DoesNotExist:
+            raise NotFoundError('project', 'id={}'.format(project_name))
+
+        if project.created_by != user:
+            raise ForbiddenError(
+                "Cannot share a project not created by current user.")
+
+        # pre-validate params (password)
+
+        if password_protected is None:
+            raise InvalidParamError('"password_protected" should be provided.')
+
+        if password_protected:
+            myguard.check_literaly.password(password=password, is_new=True)
+        else:
+            if password is not None:
+                raise InvalidParamError(
+                    '"password" should not be provided when "password_protected" is disabled.')
+
+        # construct new project object
+        share_config = ShareConfig(**body)
+
+        # set time
+        curr_time = datetime.utcnow
+        share_config.created = curr_time
+        share_config.modified = curr_time
+
+        # set created by
+        share_config.created_by = user
+
+        # save share config
+        try:
+            share_config.save()
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+        # update user's and project's reference to share_config
+        try:
+            project.update(push__share_configs=share_config)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
         share_config.desensitize()
         return share_config
 
