@@ -1,7 +1,10 @@
 from dataclasses import fields
 
 from database import db
+from errors import (ForbiddenError, InvalidParamError, NotFoundError,
+                    NotMutableError)
 from flask_bcrypt import check_password_hash, generate_password_hash
+from mongoengine.errors import DoesNotExist, ValidationError
 from mongoengine.fields import (DateTimeField, EmailField, ListField,
                                 ReferenceField, StringField)
 
@@ -32,11 +35,11 @@ class User(db.Document):
         if hasattr(self, 'password'):
             del self.password
 
-    """
-    def __init__(self, *args, **values):
-        super().__init__(*args, **values)
-        self.password = generate_password_hash(self.password).decode('utf8')
-    """
+    def add_project(this, project: Project) -> None:
+        try:
+            this.update(push__projects=project)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
 
     @classmethod
     def get_password_hash(cls, password: str) -> str:

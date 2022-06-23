@@ -1,8 +1,12 @@
 from database import db
+from errors import (ForbiddenError, InvalidParamError, NotFoundError,
+                    NotMutableError)
+from flask_bcrypt import check_password_hash, generate_password_hash
+from mongoengine.errors import DoesNotExist, ValidationError
+from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
+                                ListField, ReferenceField, StringField)
 
-from mongoengine.fields import (
-    EmailField, StringField, DateTimeField, ListField, ReferenceField, BooleanField)
-from . import User, DataSource, DisplaySchema, ShareConfig
+from . import DataSource, DisplaySchema, ShareConfig, User
 
 
 class Project(db.Document):
@@ -17,3 +21,9 @@ class Project(db.Document):
     share_configs = ListField(db.ReferenceField(ShareConfig.__name__))
 
     uneditable_fields = ['created', 'modified', 'created_by']
+
+    def save(self, *args, **kwargs):
+        try:
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)

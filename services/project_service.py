@@ -8,9 +8,12 @@ from mongoengine.errors import DoesNotExist, ValidationError
 from utils.guard import myguard
 from utils.logger import get_the_logger
 
+logger = get_the_logger()
+
 
 class ProjectService:
     def get_projects(self, args, jwt_id) -> List[Project]:
+
         # validate args and construct query dict
         query = {}
         if 'public' in args:
@@ -110,16 +113,10 @@ class ProjectService:
         project.created_by = user
 
         # save new project
-        try:
-            project.save()
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
+        project.save()
 
         # update user's reference to project
-        try:
-            user.update(push__projects=project)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
+        user.add_project(project)
 
         return project
 
