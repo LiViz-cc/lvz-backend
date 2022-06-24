@@ -8,8 +8,6 @@ from mongoengine.errors import DoesNotExist, ValidationError
 from mongoengine.fields import (DateTimeField, EmailField, ListField,
                                 ReferenceField, StringField)
 
-from . import DataSource, Project, ShareConfig
-
 
 class User(db.Document):
     # use email as unique identifier of the user
@@ -19,9 +17,9 @@ class User(db.Document):
     created = DateTimeField(required=True)
     modified = DateTimeField(required=True)
     projects = ListField(
-        ReferenceField(Project.__name__, reverse_delete_rule=db.PULL))
+        ReferenceField('Project', reverse_delete_rule=db.PULL))
     data_sources = ListField(
-        ReferenceField(DataSource.__name__, reverse_delete_rule=db.PULL))
+        ReferenceField('DataSource', reverse_delete_rule=db.PULL))
 
     uneditable_fields = ['created', 'modified']
 
@@ -41,13 +39,13 @@ class User(db.Document):
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-    def add_project(self, project: Project) -> None:
+    def add_project(self, project) -> None:
         try:
             self.update(push__projects=project)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-    def add_data_source(self, data_source: DataSource):
+    def add_data_source(self, data_source):
         try:
             self.update(push__data_sources=data_source)
         except ValidationError as e:

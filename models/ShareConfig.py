@@ -1,20 +1,17 @@
 from database import db
 from errors import (ForbiddenError, InvalidParamError, NotFoundError,
                     NotMutableError)
-from flask_bcrypt import check_password_hash, generate_password_hash
 from mongoengine.errors import DoesNotExist, ValidationError
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
                                 ListField, ReferenceField, StringField)
-
-from . import DataSource, DisplaySchema, Project, ShareConfig, User
 
 
 class ShareConfig(db.Document):
     name = StringField(required=True, max_length=50)
     created = DateTimeField(required=True)
     modified = DateTimeField(required=True)
-    created_by = ReferenceField(User.__name__, required=True)
-    linked_project = ReferenceField(Project.__name__, required=True)
+    created_by = ReferenceField('User', required=True)
+    linked_project = ReferenceField('Project', required=True)
     description = StringField(required=True, default='', max_length=1000)
     password_protected = db.BooleanField(required=True)
     password = db.StringField(min_length=0, max_length=60)

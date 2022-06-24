@@ -1,19 +1,9 @@
-from asyncio.log import logger
-from cmath import log
-from datetime import datetime
-from logging import exception
 
-from errors import (ForbiddenError, InvalidParamError, NotFinishedYet,
-                    NotFoundError, NotMutableError)
 from flask import Request, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
-from models import Project, User
-from models.ShareConfig import ShareConfig
-from mongoengine.errors import DoesNotExist, ValidationError
 from services.share_config_service import ShareConfigService
 from utils import get_current_user, get_the_logger, myguard
-from werkzeug.exceptions import BadRequest
 
 from .response_wrapper import response_wrapper
 
