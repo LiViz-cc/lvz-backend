@@ -31,9 +31,3 @@ class ShareConfig(db.Document):
     def desensitize(self):
         if hasattr(self, 'password'):
             del self.password
-
-    def save(self, *args, **kwargs):
-        try:
-            super().save(*args, **kwargs)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)

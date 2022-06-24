@@ -18,9 +18,3 @@ class DisplaySchema(db.Document):
         'Project', required=True)
 
     uneditable_fields = ['created', 'modified', 'created_by']
-
-    def save(self, *args, **kwargs):
-        try:
-            super().save(*args, **kwargs)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)

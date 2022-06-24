@@ -1,15 +1,23 @@
 import datetime
 from typing import List
+from dao.data_source_dao import DataSourceDao
+from dao.project_dao import ProjectDao
+from dao.user_dao import UserDao
 
 from errors import (ForbiddenError, InvalidParamError, NotFoundError,
                     NotMutableError)
 from models import DataSource, User
+from models.Project import Project
 from mongoengine.errors import DoesNotExist, ValidationError
 from utils.guard import myguard
 
 
-
 class DataSourcesService:
+    def __init__(self) -> None:
+        self.user_dao = UserDao()
+        self.project_dao = ProjectDao()
+        self.data_source_dao = DataSourceDao()
+
     def get_data_sources(self, args, jwt_id) -> List[DataSource]:
         # validate args and construct query dict
         query = {}
@@ -20,12 +28,9 @@ class DataSourcesService:
                 query['public'] = True
         if 'created_by' in args:
             # check authorization
-            myguard._check.user_id(jwt_id)
+            myguard.check_literaly.user_id(jwt_id)
+            user = self.user_dao.get_user_by_id(jwt_id)
 
-            try:
-                user = User.objects.get(id=jwt_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(jwt_id))
             if args['created_by'] != str(user.id):
                 raise ForbiddenError()
             query['created_by'] = user
@@ -36,19 +41,13 @@ class DataSourcesService:
 
     def get_data_source_by_id(self, id, jwt_id) -> DataSource:
         # query data source via id
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data source', 'id={}'.format(id))
+        data_source = self.data_source_dao.get_by_id(id)
 
         # check authorization
         if not data_source.public:
             myguard._check.user_id(jwt_id)
+            user = self.user_dao.get_user_by_id(jwt_id)
 
-            try:
-                user = User.objects.get(id=jwt_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(jwt_id))
             if not data_source.created_by == user:
                 raise ForbiddenError()
 
@@ -139,7 +138,6 @@ class DataSourcesService:
             raise NotFoundError('data_source', 'id={}'.format(id))
 
         # check authorization
-
         myguard.check_literaly.user_id(user_id)
 
         try:
@@ -154,3 +152,12 @@ class DataSourcesService:
         data_source.delete()
 
         return {}
+
+    def link_to_project(self, data_source: DataSource, project: Project, jwt_id: str) -> None:
+        # TODO: need test
+
+        user = self.user_dao.get_user_by_id(jwt_id)
+        if (data_source.created_by != user) or (project.created_by != user):
+            raise ForbiddenError()
+
+        self.project_dao.add_data_source(project, data_source)

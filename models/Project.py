@@ -21,21 +21,3 @@ class Project(db.Document):
         'ShareConfig', reverse_delete_rule=db.PULL))
 
     uneditable_fields = ['created', 'modified', 'created_by']
-
-    def save(self, *args, **kwargs):
-        try:
-            super().save(*args, **kwargs)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
-    def add_data_source(self, data_source):
-        try:
-            self.update(push__data_sources=data_source)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
-    def add_share_config(self, share_config):
-        try:
-            self.update(push__share_config=share_config)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)

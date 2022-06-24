@@ -1,5 +1,6 @@
 import datetime
 from typing import List
+from dao import *
 
 from errors import (ForbiddenError, InvalidParamError, NotFoundError,
                     NotMutableError)
@@ -12,6 +13,10 @@ logger = get_the_logger()
 
 
 class ProjectService:
+    def __init__(self) -> None:
+        self.project_dao = ProjectDao()
+        self.user_dao = UserDao()
+
     def get_projects(self, args, jwt_id) -> List[Project]:
         # validate args and construct query dict
         query = {}
@@ -112,10 +117,10 @@ class ProjectService:
         project.created_by = user
 
         # save new project
-        project.save()
+        self.project_dao.save(project)
 
         # update user's reference to project
-        user.add_project(project)
+        self.user_dao.add_project(user, project)
 
         return project
 
@@ -165,13 +170,3 @@ class ProjectService:
         project.delete()
 
         return {}
-
-    def add_data_source(self, project: Project, data_source: DataSource):
-        myguard.check_literaly.is_not_null(project, 'Project')
-        myguard.check_literaly.is_not_null(data_source, 'DataSource')
-        return project.add_data_source(data_source)
-
-    def add_share_config(self, project: Project, share_config: ShareConfig):
-        myguard.check_literaly.is_not_null(project, 'Project')
-        myguard.check_literaly.is_not_null(share_config, 'ShareConfig')
-        return project.add_share_config(share_config)

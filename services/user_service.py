@@ -1,4 +1,5 @@
 import datetime
+from dao.user_dao import UserDao
 
 from errors import (ForbiddenError, InvalidParamError, NotFinishedYet,
                     NotFoundError)
@@ -8,6 +9,9 @@ from utils.guard import myguard
 
 
 class UserService():
+    def __init__(self) -> None:
+        self.user_dao = UserDao()
+
     def get_user_by_id(self, id, jwt_id) -> User:
         # check authorization
         myguard.check_literaly.user_id(jwt_id)
@@ -21,6 +25,19 @@ class UserService():
         # user can only get their own info
         if jwt_id != str(user.id):
             raise ForbiddenError()
+
+        user.desensitize()
+        return user
+
+    def get_user_by_jwt_id(self, jwt_id) -> User:
+        # check authorization
+        myguard.check_literaly.user_id(jwt_id)
+
+        # query user via id
+        try:
+            user = User.objects.get(id=jwt_id)
+        except DoesNotExist:
+            raise NotFoundError('user', 'id={}'.format(id))
 
         user.desensitize()
         return user
@@ -63,13 +80,3 @@ class UserService():
 
         user.desensitize()
         return user
-
-    def add_project(self, user: User, project: Project):
-        myguard.check_literaly.is_not_null(user, 'User')
-        myguard.check_literaly.is_not_null(project, 'Project')
-        user.add_project(project)
-
-    def add_data_source(self, user: User, data_source: DataSource):
-        myguard.check_literaly.is_not_null(user, 'User')
-        myguard.check_literaly.is_not_null(data_source, 'DataSource')
-        user.add_data_source(data_source)

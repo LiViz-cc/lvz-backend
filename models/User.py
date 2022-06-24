@@ -33,24 +33,6 @@ class User(db.Document):
         if hasattr(self, 'password'):
             del self.password
 
-    def save(self, *args, **kwargs):
-        try:
-            super().save(*args, **kwargs)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
-    def add_project(self, project) -> None:
-        try:
-            self.update(push__projects=project)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
-    def add_data_source(self, data_source):
-        try:
-            self.update(push__data_sources=data_source)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-
     @classmethod
     def get_password_hash(cls, password: str) -> str:
         """
