@@ -30,3 +30,14 @@ class ProjectDao:
             project.save()
         except ValidationError as e:
             raise InvalidParamError(e.message)
+
+    def get_by_id(self, id) -> Project:
+        # query project via id
+        myguard.check_literaly.object_id(id)
+
+        try:
+            project = Project.objects.get(id=id)
+        except DoesNotExist:
+            raise NotFoundError('project', 'id={}'.format(id))
+
+        return project

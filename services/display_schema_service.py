@@ -37,8 +37,13 @@ class DisplaySchemaService:
 
         return display_schemas
 
-    def create_display_schema(self, body, jwt_id) -> DisplaySchema:
+    def create_display_schema(self, body: dict, jwt_id: str) -> DisplaySchema:
         # pre-validate params
+        linked_project_id = body.get('linked_project', None)
+        if linked_project_id:
+            # Try to get project by provided id
+            # If works, do nothing
+            self.project_dao.get_by_id(linked_project_id)
 
         # construct new display schema object
         display_schema = DisplaySchema(**body)
@@ -71,6 +76,12 @@ class DisplaySchemaService:
 
     def edit_display_schema(self, id, body, jwt_id) -> DisplaySchema:
         # pre-validate params
+
+        # pre-process params
+        linked_project_id = body.get('linked_project', None)
+        if linked_project_id:
+            linked_project = self.project_dao.get_by_id(linked_project_id)
+            body['linked_project'] = linked_project
 
         # query project via id
         display_schema = self.display_schema_dao.get_by_id(id)
