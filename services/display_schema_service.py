@@ -1,14 +1,20 @@
 import datetime
 from typing import List
 
+from dao import *
 from errors import (ForbiddenError, InvalidParamError, NotFoundError,
                     NotMutableError, UnauthorizedError)
-from models import DisplaySchema, User
+from models import *
 from mongoengine.errors import DoesNotExist, ValidationError
-from utils.guard import myguard
+from utils.common import *
 
 
 class DisplaySchemaService:
+    def __init__(self) -> None:
+        self.user_dao = UserDao()
+        self.project_dao = ProjectDao()
+        self.data_source_dao = DataSourceDao()
+        self.display_schema_dao = DisplaySchemaDao()
 
     def get_display_schemas(self, args, jwt_id) -> List[DisplaySchema]:
         # validate args and construct query dict
@@ -20,12 +26,8 @@ class DisplaySchemaService:
                 query['public'] = True
         if 'created_by' in args:
             # check authorization
-            myguard.check_literaly.user_id(jwt_id)
+            user = self.user_dao.get_user_by_id(jwt_id)
 
-            try:
-                user = User.objects.get(id=jwt_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(jwt_id))
             if args['created_by'] != str(user.id):
                 raise ForbiddenError()
             query['created_by'] = user
@@ -47,36 +49,21 @@ class DisplaySchemaService:
         display_schema.modified = curr_time
 
         # set created by
-        myguard.check_literaly.user_id(jwt_id)
-
-        try:
-            user = User.objects.get(id=jwt_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(jwt_id))
+        user = self.user_dao.get_user_by_id(jwt_id)
         display_schema.created_by = user
 
         # save new display schema
-        try:
-            display_schema.save()
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
+        self.display_schema_dao.save(display_schema)
 
         return display_schema
 
     def get_display_schema_by_id(self, id, jwt_id) -> DisplaySchema:
         # query data source via id
-        try:
-            display_schema = DisplaySchema.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('display schema', 'id={}'.format(id))
+        display_schema = self.display_schema_dao.get_by_id(id)
 
         # check authorization
         if not display_schema.public:
-            myguard.check_literaly.user_id(jwt_id)
-            try:
-                user = User.objects.get(id=jwt_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(jwt_id))
+            user = self.user_dao.get_user_by_id(jwt_id)
             if not display_schema.created_by == user:
                 raise ForbiddenError()
 
@@ -86,58 +73,31 @@ class DisplaySchemaService:
         # pre-validate params
 
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            display_schema = DisplaySchema.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('display_schema', 'id={}'.format(id))
+        display_schema = self.display_schema_dao.get_by_id(id)
 
         # check authorization
+        user = self.user_dao.get_user_by_id(jwt_id)
 
-        myguard.check_literaly.user_id(jwt_id)
-
-        try:
-            user = User.objects.get(id=jwt_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(jwt_id))
         if display_schema.created_by != user:
             raise ForbiddenError()
 
         # Forbid changing immutable field
-        for field_name in DisplaySchema.uneditable_fields:
-            if body.get(field_name, None):
-                raise NotMutableError(DisplaySchema.__name__, field_name)
+        self.display_schema_dao.assert_fields_editable(body)
 
         body['modified'] = datetime.datetime.utcnow
 
         # update project
-        try:
-            display_schema.modify(**body)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-        except LookupError as e:
-            raise InvalidParamError(e.message)
+        self.display_schema_dao.modify(display_schema, body)
 
         return display_schema
 
     def delete_display_schema(self, id, jwt_id) -> dict:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            display_schema = DisplaySchema.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('display_schema', 'id={}'.format(id))
+        display_schema = self.display_schema_dao.get_by_id(id)
 
         # check authorization
+        user = self.user_dao.get_user_by_id(jwt_id)
 
-        myguard.check_literaly.user_id(jwt_id)
-
-        try:
-            user = User.objects.get(id=jwt_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(jwt_id))
         if display_schema.created_by != user:
             raise ForbiddenError()
 
