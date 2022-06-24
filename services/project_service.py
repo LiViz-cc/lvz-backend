@@ -13,7 +13,6 @@ logger = get_the_logger()
 
 class ProjectService:
     def get_projects(self, args, jwt_id) -> List[Project]:
-
         # validate args and construct query dict
         query = {}
         if 'public' in args:

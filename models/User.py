@@ -35,9 +35,21 @@ class User(db.Document):
         if hasattr(self, 'password'):
             del self.password
 
-    def add_project(this, project: Project) -> None:
+    def save(self, *args, **kwargs):
         try:
-            this.update(push__projects=project)
+            super().save(*args, **kwargs)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+    def add_project(self, project: Project) -> None:
+        try:
+            self.update(push__projects=project)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+    def add_data_source(self, data_source: DataSource):
+        try:
+            self.update(push__data_sources=data_source)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
