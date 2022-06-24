@@ -2,7 +2,7 @@ import datetime
 
 from errors import (ForbiddenError, InvalidParamError, NotFinishedYet,
                     NotFoundError)
-from models import User
+from models import DataSource, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, ValidationError
 from utils.guard import myguard
 
@@ -63,3 +63,13 @@ class UserService():
 
         user.desensitize()
         return user
+
+    def add_project(self, user: User, project: Project):
+        myguard.check_literaly.is_not_null(user, 'User')
+        myguard.check_literaly.is_not_null(project, 'Project')
+        user.add_project(project)
+
+    def add_data_source(self, user: User, data_source: DataSource):
+        myguard.check_literaly.is_not_null(user, 'User')
+        myguard.check_literaly.is_not_null(data_source, 'DataSource')
+        user.add_data_source(data_source)

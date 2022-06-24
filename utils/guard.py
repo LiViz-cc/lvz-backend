@@ -96,6 +96,10 @@ class CheckingCenter():
 
         return self
 
+    def is_not_null(self, object, object_name="object"):
+        if object is None:
+            raise InvalidParamError('{} cannot be null.'.format(object_name))
+
 
 class GuardFactory:
     def __init__(self) -> None:
