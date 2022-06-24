@@ -21,10 +21,8 @@ class ShareConfig(db.Document):
     uneditable_fields = ['created', 'modified',
                          'created_by', 'password_protected', 'password']
 
-    # def hash_password(self):
-    #     self.password = generate_password_hash(self.password).decode('utf8')
-
     # TODO: CHANGE TO PLAIN TEXT
+
     def check_password(self, password):
         return self.password == password
 

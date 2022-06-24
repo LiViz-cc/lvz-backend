@@ -64,27 +64,15 @@ class DataSourcesService:
         data_source.modified = curr_time
 
         # set created by
+        user = self.user_dao.get_user_by_id(jwt_id)
 
-        myguard._check.user_id(jwt_id)
-
-        try:
-            user = User.objects.get(id=jwt_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(jwt_id))
-        user: User
         data_source.created_by = user
 
         # save new data source
-        try:
-            data_source.save()
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
+        self.data_source_dao.save(data_source)
 
         # update user's reference to share_config
-        try:
-            user.update(push__data_sources=data_source)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
+        self.user_dao.add_data_source(user, data_source)
 
         return data_source
 
@@ -92,58 +80,32 @@ class DataSourcesService:
         # pre-validate params
 
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data_source', 'id={}'.format(id))
+        data_source = self.data_source_dao.get_by_id(id)
 
         # check authorization
-
         myguard.check_literaly.user_id(jwt_id)
 
-        try:
-            user = User.objects.get(id=jwt_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(jwt_id))
+        user = self.user_dao.get_user_by_id(jwt_id)
 
         if data_source.created_by != user:
             raise ForbiddenError()
 
         # Forbid changing immutable field
-        for field_name in DataSource.uneditable_fields:
-            if body.get(field_name, None):
-                raise NotMutableError(DataSource.__name__, field_name)
+        self.data_source_dao.assert_fields_editable(body)
 
         body['modified'] = datetime.datetime.utcnow
 
         # update project
-        try:
-            data_source.modify(**body)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-        except LookupError as e:
-            raise InvalidParamError(e.message)
+        self.data_source_dao.modify(data_source, body)
 
         return data_source
 
-    def delete_data_source(self, id, user_id) -> dict:
+    def delete_data_source(self, id, jwt_id) -> dict:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data_source', 'id={}'.format(id))
+        data_source = self.data_source_dao.get_by_id(id)
 
         # check authorization
-        myguard.check_literaly.user_id(user_id)
-
-        try:
-            user = User.objects.get(id=user_id)
-        except DoesNotExist:
-            raise NotFoundError('user', 'id={}'.format(user_id))
+        user = self.user_dao.get_user_by_id(jwt_id)
 
         if data_source.created_by != user:
             raise ForbiddenError()
@@ -154,7 +116,7 @@ class DataSourcesService:
         return {}
 
     def link_to_project(self, data_source: DataSource, project: Project, jwt_id: str) -> None:
-        # TODO: need test
+        # TODO: need some tests
 
         user = self.user_dao.get_user_by_id(jwt_id)
         if (data_source.created_by != user) or (project.created_by != user):
