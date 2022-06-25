@@ -41,3 +41,16 @@ class ProjectDao:
             raise NotFoundError('project', 'id={}'.format(id))
 
         return project
+
+    def assert_fields_editable(self, body: dict) -> None:
+        for field_name in Project.uneditable_fields:
+            if body.get(field_name, None):
+                raise NotMutableError(Project.__name__, field_name)
+
+    def modify(self, project: Project, body: dict) -> None:
+        try:
+            project.modify(**body)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+        except LookupError as e:
+            raise InvalidParamError(e.message)

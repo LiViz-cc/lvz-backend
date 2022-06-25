@@ -16,6 +16,8 @@ class ProjectService:
     def __init__(self) -> None:
         self.project_dao = ProjectDao()
         self.user_dao = UserDao()
+        self.data_source_dao = DataSourceDao()
+        self.display_schema_dao = DisplaySchemaDao()
 
     def get_projects(self, args, jwt_id) -> List[Project]:
         # validate args and construct query dict
@@ -30,12 +32,8 @@ class ProjectService:
 
         if 'created_by' in args:
             # check authorization
-            myguard.check_literaly.user_id(jwt_id)
+            user = self.user_dao.get_user_by_id(jwt_id)
 
-            try:
-                user = User.objects.get(id=jwt_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(jwt_id))
             if args['created_by'] != str(user.id):
                 raise ForbiddenError()
             query['created_by'] = user
@@ -45,23 +43,13 @@ class ProjectService:
 
         return projects
 
-    def get_project_by_id(self, id, user_id) -> Project:
+    def get_project_by_id(self, id, jwt_id) -> Project:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            project = Project.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('project', 'id={}'.format(id))
+        project = self.project_dao.get_by_id(id)
 
         # check authorization
         if not project.public:
-            myguard.check_literaly.user_id(user_id)
-
-            try:
-                user = User.objects.get(id=user_id)
-            except DoesNotExist:
-                raise NotFoundError('user', 'id={}'.format(user_id))
+            user = self.user_dao.get_user_by_id(jwt_id)
             if project.created_by != user:
                 raise ForbiddenError()
 
@@ -77,11 +65,8 @@ class ProjectService:
 
         if data_source_ids:
             for data_source_id in data_source_ids:
-                try:
-                    data_source = DataSource.objects.get(id=data_source_id)
-                except DoesNotExist:
-                    raise NotFoundError(
-                        'data_source', 'id={}'.format(data_source_id))
+                data_source = self.data_source_dao.get_by_id(data_source_id)
+
                 if not data_source.public:
                     if is_public:
                         raise InvalidParamError(
@@ -92,12 +77,8 @@ class ProjectService:
         # pre-validate params (display_schema_id)
 
         if display_schema_id:
-            try:
-                display_schema = DisplaySchema.objects.get(
-                    id=display_schema_id)
-            except DoesNotExist:
-                raise NotFoundError(
-                    'display_schema', 'id={}'.format(display_schema_id))
+            display_schema = self.display_schema_dao.get_by_id(
+                display_schema_id)
             if not display_schema.public:
                 if is_public:
                     raise InvalidParamError(
@@ -126,41 +107,24 @@ class ProjectService:
 
     def edit_project(self, id, body, user) -> Project:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            project = Project.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('project', 'id={}'.format(id))
+        project = self.project_dao.get_by_id(id)
 
         if project.created_by != user:
             raise ForbiddenError()
 
         # Forbid changing immutable field
-        for field_name in Project.uneditable_fields:
-            if body.get(field_name, None):
-                raise NotMutableError(Project.__name__, field_name)
+        self.project_dao.assert_fields_editable(body)
 
         body['modified'] = datetime.datetime.utcnow
 
         # update project
-        try:
-            project.modify(**body)
-        except ValidationError as e:
-            raise InvalidParamError(e.message)
-        except LookupError as e:
-            raise InvalidParamError(e.message)
+        self.project_dao.modify(project, body)
 
         return project
 
     def delete_project(self, id, user) -> dict:
         # query project via id
-        myguard.check_literaly.object_id(id)
-
-        try:
-            project = Project.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('project', 'id={}'.format(id))
+        project = self.project_dao.get_by_id(id)
 
         # check authorization
         if project.created_by != user:
