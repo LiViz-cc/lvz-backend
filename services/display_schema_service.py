@@ -82,12 +82,6 @@ class DisplaySchemaService:
     def edit_display_schema(self, id, body, jwt_id) -> DisplaySchema:
         # pre-validate params
 
-        # pre-process params
-        linked_project_id = body.get('linked_project', None)
-        if linked_project_id:
-            linked_project = self.project_dao.get_by_id(linked_project_id)
-            body['linked_project'] = linked_project
-
         # query project via id
         display_schema = self.display_schema_dao.get_by_id(id)
 
@@ -96,6 +90,18 @@ class DisplaySchemaService:
 
         if display_schema.created_by != user:
             raise ForbiddenError()
+
+        # pre-process params
+        linked_project_id = body.get('linked_project', None)
+        if linked_project_id:
+            linked_project = self.project_dao.get_by_id(linked_project_id)
+
+            # check authorization
+            if linked_project.created_by != display_schema.created_by:
+                raise ForbiddenError(
+                    'linked_project is not created by the user')
+
+            body['linked_project'] = linked_project
 
         # Forbid changing immutable field
         self.display_schema_dao.assert_fields_editable(body)

@@ -60,7 +60,6 @@ class ShareConfigService:
                 "Cannot share a project not created by current user.")
 
         # pre-validate params (password)
-
         if password_protected is None:
             raise InvalidParamError('"password_protected" should be provided.')
 
@@ -92,9 +91,14 @@ class ShareConfigService:
         share_config.desensitize()
         return share_config
 
-    def put_by_id(self, id: str, user, password: str, body: dict) -> ShareConfig:
+    def edit_by_id(self, id: str, user, password: str, body: dict) -> ShareConfig:
         # query project via id
         share_config = self.share_config_dao.get_by_id(id)
+
+        linked_project_id = body.get('linked_project', None)
+        if linked_project_id:
+            raise ForbiddenError(
+                'Share config cannot change the linked project. Please create a new share config.')
 
         if share_config.created_by != user:
             raise ForbiddenError(
@@ -138,11 +142,14 @@ class ShareConfigService:
             raise ForbiddenError()
 
         # check if password-protected
-        self.share_config_dao.assert_password_match(share_config, old_password)
+        if share_config.password_protected:
+            self.share_config_dao.assert_password_match(
+                share_config, old_password)
 
         myguard.check_literaly.password(new_password, is_new=True)
 
         modifing_dict = {'password': new_password,
+                         'password_protected': True,
                          'modified': datetime.datetime.utcnow}
 
         # save share config

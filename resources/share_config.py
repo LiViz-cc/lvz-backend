@@ -81,7 +81,7 @@ class ShareConfigResource(Resource):
         if password is not None:
             del body['password']
 
-        return self.share_config_service.put_by_id(id, current_user, password=password, body=body)
+        return self.share_config_service.edit_by_id(id, current_user, password=password, body=body)
 
     @response_wrapper
     @jwt_required()
@@ -109,5 +109,9 @@ class ShareConfigPasswordResource(Resource):
         body = request.get_json()
         old_password = body.get('old_password')
         new_password = body.get('new_password', None)
+        password = body.get('password', None)
+        password_protected = body.get('password_protected', None)
+
+        # TODO: add support for changing if password-protected
 
         return self.share_config_service.change_password(id=id, user=current_user, old_password=old_password, new_password=new_password)
