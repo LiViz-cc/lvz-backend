@@ -48,6 +48,7 @@ class DisplaySchemaService:
         ])
 
         linked_project = self.project_dao.get_by_id(linked_project_id)
+
         body['linked_project'] = linked_project
 
         # construct new display schema object
@@ -64,6 +65,9 @@ class DisplaySchemaService:
 
         # save new display schema
         self.display_schema_dao.save(display_schema)
+
+        # register display_schema in project
+        self.project_dao.change_display_schema(linked_project, display_schema)
 
         return display_schema
 

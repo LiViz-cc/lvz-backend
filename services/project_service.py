@@ -13,6 +13,7 @@ class ProjectService:
         self.user_dao = UserDao()
         self.data_source_dao = DataSourceDao()
         self.display_schema_dao = DisplaySchemaDao()
+        self.share_config_dao = ShareConfigDao()
 
     def get_projects(self, args, jwt_id) -> List[Project]:
         # validate args and construct query dict
@@ -137,3 +138,15 @@ class ProjectService:
         project.delete()
 
         return {}
+
+    def add_data_sources(self, project_id: str, data_source_ids: List[str]):
+        # TODO: need a API to implement it
+        project = self.project_dao.get_by_id(project_id)
+        data_sources = []
+
+        for data_source_id in data_source_ids:
+            data_source = self.data_source_dao.get_by_id(data_source_id)
+            data_sources.append(data_source)
+
+        for data_source in data_sources:
+            self.project_dao.add_data_source(project, data_source)

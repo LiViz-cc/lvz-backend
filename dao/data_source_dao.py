@@ -5,7 +5,7 @@ from utils.common import *
 
 
 class DataSourceDao:
-    def get_by_id(self, id: str):
+    def get_by_id(self, id: str) -> DataSource:
         myguard.check_literaly.object_id(id)
         try:
             data_source = DataSource.objects.get(id=id)
@@ -14,13 +14,13 @@ class DataSourceDao:
 
         return data_source
 
-    def save(self, data_source: DataSource):
+    def save(self, data_source: DataSource) -> None:
         try:
             data_source.save()
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-    def assert_fields_editable(self, mutation_body: dict):
+    def assert_fields_editable(self, mutation_body: dict) -> None:
         if not mutation_body or not isinstance(mutation_body, dict):
             raise InvalidParamError('"mutation_body" is not valid.')
 

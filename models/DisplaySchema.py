@@ -16,4 +16,4 @@ class DisplaySchema(db.Document):
     echarts_option = StringField()  # temp, option JSON
     linked_project = ReferenceField('Project', required=True)
 
-    uneditable_fields = ['created', 'modified', 'created_by']
+    uneditable_fields = ['created', 'modified', 'created_by', 'linked_project']

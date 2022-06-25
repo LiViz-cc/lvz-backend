@@ -34,3 +34,4 @@ class DisplaySchemaDao:
             raise InvalidParamError(e.message)
         except LookupError as e:
             raise InvalidParamError(e.message)
+
