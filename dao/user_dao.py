@@ -38,6 +38,13 @@ class UserDao:
         return user
 
     def get_user_by_id(self, id: str) -> User:
+        """
+        Args:
+            id (str): user_id
+
+        Returns:
+            User: desensitized user with provided id
+        """
         user = self.get_user_by_id_with_sensitive_info(id)
 
         user.desensitize()

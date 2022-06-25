@@ -40,10 +40,11 @@ class DisplaySchemaService:
     def create_display_schema(self, body: dict, jwt_id: str) -> DisplaySchema:
         # pre-validate params
         linked_project_id = body.get('linked_project', None)
-        if linked_project_id:
-            # Try to get project by provided id
-            # If works, do nothing
-            self.project_dao.get_by_id(linked_project_id)
+        if not linked_project_id:
+            raise InvalidParamError('linked_project cannot be empty.')
+
+        linked_project = self.project_dao.get_by_id(linked_project_id)
+        body['linked_project'] = linked_project
 
         # construct new display schema object
         display_schema = DisplaySchema(**body)

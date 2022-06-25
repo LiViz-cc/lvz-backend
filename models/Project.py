@@ -14,7 +14,8 @@ class Project(db.Document):
     created_by = ReferenceField('User')
     public = BooleanField(required=True, default=False)
     description = StringField(required=True, default='', max_length=1000)
-    data_source = ListField(db.ReferenceField(
+
+    data_sources = ListField(db.ReferenceField(
         'DataSource', reverse_delete_rule=db.PULL))
     display_schema = ReferenceField('DisplaySchema')
     share_configs = ListField(db.ReferenceField(
