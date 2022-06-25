@@ -2,7 +2,9 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
+from errors import InvalidParamError
 from services import ProjectService
+from utils.common import *
 from utils.jwt import get_current_user
 from utils.logger import get_the_logger
 
@@ -37,8 +39,14 @@ class ProjectsResource(Resource):
         logger.info('POST project with body {}'.format(body))
 
         public = body.get('public', None)
-        data_source_ids = body.get('data_source', None)
+        data_source_ids = body.get('data_sources', None)
         display_schema_id = body.get('display_schema', None)
+
+        myguard.check_literaly.check_type([
+            [bool, public,  'public', 'nullable'],
+            [list, data_source_ids,  'data_sources'],
+            [str, display_schema_id,  'display_schema', 'nullable']
+        ])
 
         user = get_current_user()
 

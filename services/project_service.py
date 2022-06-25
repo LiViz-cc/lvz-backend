@@ -57,8 +57,11 @@ class ProjectService:
             body['public'] = is_public
 
         # pre-validate params (data_source_id)
-
         if data_source_ids:
+            if not isinstance(data_source_ids, list):
+                raise InvalidParamError('data_sources should be a list.')
+
+            data_source_list = []
             for data_source_id in data_source_ids:
                 data_source = self.data_source_dao.get_by_id(data_source_id)
 
@@ -69,8 +72,11 @@ class ProjectService:
                     if data_source.created_by.id != user.id:
                         raise ForbiddenError()
 
-        # pre-validate params (display_schema_id)
+                data_source_list.append(data_source)
 
+            body['data_sources'] = data_source_list
+
+        # pre-validate params (display_schema_id)
         if display_schema_id:
             display_schema = self.display_schema_dao.get_by_id(
                 display_schema_id)
@@ -80,6 +86,8 @@ class ProjectService:
                         'Cannot create a public project with private display schema!')
                 if display_schema.created_by.id != user.id:
                     raise ForbiddenError()
+
+            body['display_schema'] = display_schema
 
         # construct new project object
         project = Project(**body)
