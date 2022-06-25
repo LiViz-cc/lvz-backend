@@ -103,27 +103,29 @@ class CheckingCenter():
         if object is None:
             raise InvalidParamError('{} cannot be null.'.format(object_name))
 
-    def check_type(self, check_list: List[Tuple[Type, object, str]]):
+    def check_type(self, check_list: List[Tuple[type, object, str]]):
         """
-        Check parameters types within one list
+        Check parameters types within one list.
+
+        A parameter can pass a check only if
+        * the parameter is null when 'nullable' in args
+        * or parameter is an instance of the designated type.
 
         Args:
             check_list (List[Tuple[Type, object, str, *args]]):
-            The parameters that need a type check
+            A list contains the parameters that need a check
 
         Raises:
-            InvalidParamError: if object not is an instance of the type
-                               and
-                               object is None but 'nullable' not in args
+            InvalidParamError
         """
-        for type, para,  name, *args in check_list:
-            if 'nullable' in args and para is None:
-                continue
+        for type, para, name, *args in check_list:
+            if para is None:
+                if 'nullable' in args:
+                    continue
+                raise InvalidParamError('{} cannot be null.'.format(name))
 
-            if isinstance(para, type):
-                continue
-
-            raise InvalidParamError('{} should be a bool.'.format(name))
+            if not isinstance(para, type):
+                raise InvalidParamError('{} should be a bool.'.format(name))
 
 
 class GuardFactory:

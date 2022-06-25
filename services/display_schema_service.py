@@ -43,6 +43,10 @@ class DisplaySchemaService:
         if not linked_project_id:
             raise InvalidParamError('linked_project cannot be empty.')
 
+        myguard.check_literaly.check_type([
+            [str, linked_project_id, 'linked_project']
+        ])
+
         linked_project = self.project_dao.get_by_id(linked_project_id)
         body['linked_project'] = linked_project
 
