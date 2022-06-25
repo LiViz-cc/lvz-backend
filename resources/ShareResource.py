@@ -47,11 +47,11 @@ class ShareConfigsResource(Resource):
         user = get_current_user()
 
         # pre-validate params (project)
-        project_name = body.get('linked_project', None)
+        project_id = body.get('linked_project', None)
         password_protected = body.get('password_protected', None)
         password = body.get('password', None)
 
-        return self.share_config_service.create_share_config(body, user, project_name, password_protected, password)
+        return self.share_config_service.create_share_config(body, user, project_id, password_protected, password)
 
 
 class ShareConfigResource(Resource):
