@@ -63,8 +63,10 @@ class ShareConfigResource(Resource):
     @jwt_required(optional=True)
     def get(self, id):
         # get password
-        args = request.args
-        password = args.get('password')
+        body = request.get_json()
+        password = body.get('password')
+        if password is not None:
+            del body['password']
 
         return self.share_config_service.get_by_id(id, password=password)
 
@@ -74,11 +76,10 @@ class ShareConfigResource(Resource):
         current_user = get_current_user()
 
         # get password
-        args = request.args
-        password = args.get('password')
-
-        # get message body
         body = request.get_json()
+        password = body.get('password')
+        if password is not None:
+            del body['password']
 
         return self.share_config_service.put_by_id(id, current_user, password=password, body=body)
 
@@ -88,8 +89,8 @@ class ShareConfigResource(Resource):
         current_user = get_current_user()
 
         # get password
-        args = request.args
-        password = args.get('password')
+        body = request.get_json()
+        password = body.get('password')
 
         return self.share_config_service.delete_by_id(id=id, user=current_user, password=password)
 
@@ -104,12 +105,9 @@ class ShareConfigPasswordResource(Resource):
     def post(self, id):
         current_user = get_current_user()
 
-        # get old password
-        args = request.args
-        old_password = args.get('password')
-
         # get message body
         body = request.get_json()
-        new_password = body.get('password', None)
+        old_password = body.get('old_password')
+        new_password = body.get('new_password', None)
 
         return self.share_config_service.change_password(id=id, user=current_user, old_password=old_password, new_password=new_password)

@@ -37,9 +37,6 @@ class UserPasswordResource(Resource):
     @response_wrapper
     @jwt_required()
     def post(self, id):
-        # get request args
-        args = request.args
-
         # get request body dict
         body = request.get_json()
 
@@ -47,7 +44,7 @@ class UserPasswordResource(Resource):
         jwt_id = get_jwt_identity()
 
         # query project via id
-        old_password = args.get('password', None)
-        new_password = body.get('password', None)
+        old_password = body.get('old_password', None)
+        new_password = body.get('new_password', None)
 
         return self.user_service.change_password(id, jwt_id, old_password, new_password)

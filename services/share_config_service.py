@@ -76,7 +76,7 @@ class ShareConfigService:
         share_config = ShareConfig(**body)
 
         # set time
-        curr_time = datetime.utcnow
+        curr_time = datetime.datetime.utcnow
         share_config.created = curr_time
         share_config.modified = curr_time
 
@@ -107,7 +107,7 @@ class ShareConfigService:
         self.share_config_dao.assert_fields_editable(body)
 
         # update modified time
-        body["modified"] = datetime.utcnow
+        body["modified"] = datetime.datetime.utcnow
 
         # update project
         self.share_config_dao.modify(share_config, body)
@@ -141,12 +141,12 @@ class ShareConfigService:
         self.share_config_dao.assert_password_match(share_config, old_password)
 
         myguard.check_literaly.password(new_password, is_new=True)
-        share_config['password'] = new_password
-        # share_config.hash_password()
-        share_config['modified'] = datetime.utcnow
+
+        modifing_dict = {'password': new_password,
+                         'modified': datetime.datetime.utcnow}
 
         # save share config
-        self.share_config_dao.save(share_config)
+        self.share_config_dao.modify(share_config, modifing_dict)
 
         share_config.desensitize()
         return share_config

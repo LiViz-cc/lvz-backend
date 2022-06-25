@@ -62,7 +62,7 @@ class CheckingCenter():
 
         return self
 
-    def password(self, password: str, is_new: bool):
+    def password(self, password: str, is_new: bool, password_alies='password'):
         """
         Check if `password` is valid
         Caution: Only check if the `password` is literally a valid string.
@@ -80,13 +80,15 @@ class CheckingCenter():
         """
 
         if type(is_new) != bool:
-            raise InvalidParamError('"is_new" must be boolean.')
+            raise InvalidParamError('"is_new" must be a boolean.')
 
         if password is None:
-            raise InvalidParamError('"password" cannot be null.')
+            raise InvalidParamError(
+                '"{}" cannot be null.'.format(password_alies))
 
         if type(password) != str:
-            raise InvalidParamError('"password" must be a string.')
+            raise InvalidParamError(
+                '"{}" must be a string.'.format(password_alies))
 
         # TODO more rules, e.g. special character limit, complexity level, etc.
         if is_new:

@@ -14,7 +14,7 @@ class ShareConfigDao:
 
         if not password:
             raise InvalidParamError(
-                "This share config is password-protected. Please provide password in the query.")
+                "This share config is password-protected. Please provide password in the JSON body.")
 
         if not self.check_password(share_config, password):
             raise ForbiddenError('Password is not correct.')

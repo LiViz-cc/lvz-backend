@@ -1,10 +1,11 @@
 from flask_restful import Api
 
-from resources.ShareResource import ShareConfigPasswordResource, ShareConfigResource, ShareConfigsResource
 from .auth import LoginResource, SignupResource
 from .data_source import DataSourceResource, DataSourcesResource
 from .display_schema import DisplaySchemaResource, DisplaySchemasResource
 from .project import ProjectResource, ProjectsResource
+from .share_config import (ShareConfigPasswordResource, ShareConfigResource,
+                           ShareConfigsResource)
 from .user import UserPasswordResource, UserResource
 
 
