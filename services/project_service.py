@@ -1,6 +1,7 @@
 from typing import List
 
 from dao import *
+from errors import NotFinishedYet
 from models import *
 from utils.common import *
 
@@ -139,14 +140,54 @@ class ProjectService:
 
         return {}
 
-    def add_data_sources(self, project_id: str, data_source_ids: List[str]):
-        # TODO: need a API to implement it
+    def add_data_sources(self, project_id: str, data_source_ids: List[str], jwt_id: str):
+        # TODO: need an API to implement it
+        # check authorization
+        user = self.user_dao.get_user_by_id(jwt_id)
+
+        # query project
         project = self.project_dao.get_by_id(project_id)
+        if project.created_by != user:
+            raise ForbiddenError()
+
+        # query data_sources
         data_sources = []
 
         for data_source_id in data_source_ids:
             data_source = self.data_source_dao.get_by_id(data_source_id)
+            # check authorization
+            if data_source.created_by != user:
+                raise ForbiddenError()
             data_sources.append(data_source)
 
-        for data_source in data_sources:
-            self.project_dao.add_data_source(project, data_source)
+        self.project_dao.add_data_sources(project, data_sources)
+
+        # re-query project
+        project = self.project_dao.get_by_id(project_id)
+        return project
+
+    def remove_data_sources(self, project_id: str, data_source_ids: List[str], jwt_id: str):
+        # TODO: need an API to implement it
+        # check authorization
+        user = self.user_dao.get_user_by_id(jwt_id)
+
+        # query project
+        project = self.project_dao.get_by_id(project_id)
+        if project.created_by != user:
+            raise ForbiddenError()
+
+        # query data_sources
+        data_sources = []
+
+        for data_source_id in data_source_ids:
+            data_source = self.data_source_dao.get_by_id(data_source_id)
+            # check authorization
+            if data_source.created_by != user:
+                raise ForbiddenError()
+            data_sources.append(data_source)
+
+        self.project_dao.remove_data_sources(project, data_sources)
+
+        # re-query project
+        project = self.project_dao.get_by_id(project_id)
+        return project

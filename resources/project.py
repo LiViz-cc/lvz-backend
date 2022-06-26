@@ -2,7 +2,7 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
-from errors import InvalidParamError
+from errors import InvalidParamError, NotFinishedYet
 from services import ProjectService
 from utils.common import *
 from utils.jwt import get_current_user
@@ -44,7 +44,7 @@ class ProjectsResource(Resource):
 
         myguard.check_literaly.check_type([
             [bool, public,  'public', 'nullable'],
-            [list, data_source_ids,  'data_sources'],
+            [list, data_source_ids,  'data_sources', 'nullable'],
             [str, display_schema_id,  'display_schema', 'nullable']
         ])
 
@@ -83,3 +83,27 @@ class ProjectResource(Resource):
         user = get_current_user()
 
         return self.project_service.delete_project(id, user)
+
+
+class ProjectDataSourcesResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.project_service = ProjectService()
+
+    @response_wrapper
+    @jwt_required()
+    def put(self, id):
+        body = request.get_json()
+        data_sources = body.get('data_sources', None)
+        jwt_id = get_jwt_identity()
+
+        return self.project_service.add_data_sources(id, data_sources, jwt_id)
+
+    @response_wrapper
+    @jwt_required()
+    def delete(self, id):
+        body = request.get_json()
+        data_sources = body.get('data_sources', None)
+        jwt_id = get_jwt_identity()
+
+        return self.project_service.remove_data_sources(id, data_sources,jwt_id)

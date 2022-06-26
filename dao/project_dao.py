@@ -1,4 +1,5 @@
 
+from typing import List
 from errors import *
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from utils.common import *
@@ -6,11 +7,69 @@ from utils.common import *
 
 class ProjectDao:
     def add_data_source(self, project: Project, data_source: DataSource):
+        # literally check input
         myguard.check_literaly.is_not_null(project, 'Project')
         myguard.check_literaly.is_not_null(data_source, 'DataSource')
 
+        # add item
         try:
             project.update(push__data_sources=data_source)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+    def add_data_sources(self, project: Project, data_sources: List[DataSource]):
+        # literally check input
+        myguard.check_literaly.is_not_null(project, 'Project')
+        for data_source in data_sources:
+            myguard.check_literaly.is_not_null(data_source, 'DataSource')
+
+        # assert no provided data_sources already in project
+        # TODO: need a refine for performance
+        data_sources_in_project = set(getattr(project, 'data_sources', None))
+        for data_source in data_sources:
+            if data_source in data_sources_in_project:
+                raise InvalidParamError(
+                    'data_source {} already in project {}'.format(data_source.pk, project.pk))
+
+        # add all
+        try:
+            project.update(push_all__data_sources=data_sources)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+    def remove_data_source(self, project: Project, data_source: DataSource):
+        # literally check input
+        myguard.check_literaly.is_not_null(project, 'Project')
+        myguard.check_literaly.is_not_null(data_source, 'DataSource')
+
+        # assert all provided data_sources already in project
+        if data_source not in getattr(project, 'data_sources', None):
+            raise InvalidParamError(
+                'data_source {} not in project {}'.format(data_source.pk, project.pk))
+
+        # add item
+        try:
+            project.update(pull__data_sources=data_source)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+
+    def remove_data_sources(self, project: Project, data_sources: List[DataSource]):
+        # literally check input
+        myguard.check_literaly.is_not_null(project, 'Project')
+        data_sources_in_project = set(getattr(project, 'data_sources', None))
+        for data_source in data_sources:
+            myguard.check_literaly.is_not_null(data_source, 'DataSource')
+
+        # assert all provided data_sources already in project
+        # TODO: need a refine for performance
+        for data_source in data_sources:
+            if data_source not in data_sources_in_project:
+                raise InvalidParamError(
+                    'data_source {} not in project {}'.format(data_source.pk, project.pk))
+
+        # add all
+        try:
+            project.update(pull_all__data_sources=data_sources)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
