@@ -1,8 +1,10 @@
 
 from typing import List
-from errors import *
+from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
+                    NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
-from utils.common import *
+from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
+from utils.guard import myguard
 
 
 class ProjectDao:

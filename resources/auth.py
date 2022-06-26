@@ -1,10 +1,9 @@
 
 from flask import request
-from flask_jwt_extended import create_access_token
 from flask_restful import Resource
-from services import UserService
-from utils.common import *
-from models import *
+from services import (DataSourcesService, DisplaySchemaService, ProjectService,
+                      ShareConfigService, UserService)
+from utils.logger import get_the_logger
 
 from .response_wrapper import response_wrapper
 

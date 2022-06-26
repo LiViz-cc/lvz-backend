@@ -2,9 +2,8 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
-from errors import InvalidParamError, NotFinishedYet
 from services import ProjectService
-from utils.common import *
+from utils.guard import myguard
 from utils.jwt import get_current_user
 from utils.logger import get_the_logger
 
@@ -106,4 +105,4 @@ class ProjectDataSourcesResource(Resource):
         data_sources = body.get('data_sources', None)
         jwt_id = get_jwt_identity()
 
-        return self.project_service.remove_data_sources(id, data_sources,jwt_id)
+        return self.project_service.remove_data_sources(id, data_sources, jwt_id)
