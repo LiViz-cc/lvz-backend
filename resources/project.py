@@ -42,9 +42,9 @@ class ProjectsResource(Resource):
         display_schema_id = body.get('display_schema', None)
 
         myguard.check_literaly.check_type([
-            [bool, public,  'public', 'nullable'],
-            [list, data_source_ids,  'data_sources', 'nullable'],
-            [str, display_schema_id,  'display_schema', 'nullable']
+            (bool, public, 'public', True),
+            (list, data_source_ids,  'data_sources', True),
+            (str, display_schema_id,  'display_schema', True)
         ])
 
         user = get_current_user()

@@ -41,12 +41,12 @@ class DisplaySchemaService:
     def create_display_schema(self, body: dict, jwt_id: str) -> DisplaySchema:
         # pre-validate params
         linked_project_id = body.get('linked_project', None)
-        if not linked_project_id:
-            raise InvalidParamError('linked_project cannot be empty.')
+        # if not linked_project_id:
+        #     raise InvalidParamError('linked_project cannot be empty.')
 
         myguard.check_literaly.check_type([
-            [str, linked_project_id, 'linked_project']
-        ])
+            (str, linked_project_id, 'linked_project', False)]
+        )
 
         linked_project = self.project_dao.get_by_id(linked_project_id)
 

@@ -1,5 +1,9 @@
 from typing import List, Tuple, Type
 from errors import InvalidParamError, UnauthorizedError
+from collections import namedtuple
+
+Check_Tuple = namedtuple(
+    'Check_Tuple', ['type', 'para', 'name', 'nullable'])
 
 
 class CheckingCenter():
@@ -103,7 +107,7 @@ class CheckingCenter():
         if object is None:
             raise InvalidParamError('{} cannot be null.'.format(object_name))
 
-    def check_type(self, check_list: List[Tuple[type, object, str]]):
+    def check_type(self, check_list: List[Check_Tuple]):
         """
         Check parameters types within one list.
 
@@ -112,20 +116,21 @@ class CheckingCenter():
         * or parameter is an instance of the designated type.
 
         Args:
-            check_list (List[Tuple[Type, object, str, *args]]):
+            check_list (List[Check_Tuple]):
             A list contains the parameters that need a check
 
         Raises:
             InvalidParamError
         """
-        for type, para, name, *args in check_list:
-            if para is None:
-                if 'nullable' in args:
-                    continue
-                raise InvalidParamError('{} cannot be null.'.format(name))
 
-            if not isinstance(para, type):
-                raise InvalidParamError('{} should be a bool.'.format(name))
+        for type, para, name, nullable in check_list:
+            if para is None:
+                if not nullable:
+                    InvalidParamError('{} cannot be null.'.format(name))
+
+            elif not isinstance(para, type):
+                raise InvalidParamError(
+                    '{} should be a {}.'.format(name, type.__name__))
 
 
 class GuardFactory:
