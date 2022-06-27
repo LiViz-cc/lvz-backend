@@ -4,6 +4,7 @@ from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 from utils.guard import myguard
+import copy
 
 
 class DataSourceDao:
@@ -38,3 +39,30 @@ class DataSourceDao:
             raise InvalidParamError(e.message)
         except LookupError as e:
             raise InvalidParamError(e.message)
+
+    def get_a_copy_by_id(self, data_source_id: str) -> DataSource:
+        """
+        Deep copy a data source. Caution: Cloned document has not been saved yet.
+
+        Args:
+            data_source_id (str): data_source that needs to make a deep copy
+
+        Returns:
+            DataSource: cloned document (unsaved)
+        """
+        data_source = self.get_by_id(data_source_id)
+        new_data_source = copy.deepcopy(data_source)
+        return new_data_source
+
+    def get_a_copy(self, data_source: DataSource) -> DataSource:
+        """
+        Deep copy a data source. Caution: Cloned document has not been saved yet.
+
+        Args:
+            data_source_id (str): data_source that needs to make a deep copy
+
+        Returns:
+            DataSource: cloned document (unsaved)
+        """
+        new_data_source = copy.deepcopy(data_source)
+        return new_data_source

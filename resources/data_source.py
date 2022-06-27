@@ -33,12 +33,21 @@ class DataSourcesResource(Resource):
     def post(self):
         # get request body dict
         body = request.get_json()
-        user_id = get_jwt_identity()
+        jwt_id = get_jwt_identity()
 
         logger.info(
-            'POST data_source with body {} and jwt_id {}'.format(body, user_id))
+            'POST data_source with body {} and jwt_id {}'.format(body, jwt_id))
 
-        return self.data_sources_service.create_data_source(body, user_id)
+        cloning = body.get('clone', None)
+
+        if cloning:
+            # create a data source by cloning
+            data_source_id = body.get('data_source', None)
+            myguard.check_literaly.object_id(data_source_id, 'data_source')
+            return self.data_sources_service.clone_by_id(data_source_id, jwt_id)
+        else:
+            # create a data source with information in JSON body
+            return self.data_sources_service.create_data_source(body, jwt_id)
 
 
 class DataSourceResource(Resource):

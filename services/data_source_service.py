@@ -124,3 +124,29 @@ class DataSourcesService:
             raise ForbiddenError()
 
         self.project_dao.add_data_source(project, data_source)
+        project = self.project_dao.get_by_id(project.pk)
+        return project
+
+    def clone_by_id(self, data_source_id: str, jwt_id: str) -> DataSource:
+        # get current jwt user
+        user = self.user_dao.get_user_by_id(jwt_id)
+
+        # get data_source
+        data_source = self.data_source_dao.get_by_id(data_source_id)
+
+        # check authorization
+        if not data_source.public and data_source.created_by != user:
+            raise ForbiddenError()
+
+        # get a clone
+        new_data_source = self.data_source_dao.get_a_copy(data_source)
+
+        # change meta-data
+        current_time = datetime.datetime.utcnow
+        new_data_source['created_by'] = user
+        new_data_source['created'] = current_time
+        new_data_source['modified'] = current_time
+
+        self.data_source_dao.save(new_data_source)
+
+        return new_data_source
