@@ -117,13 +117,6 @@ class ProjectDao:
             raise InvalidParamError(e.message)
 
     def change_display_schema(self, project: Project, display_schema: DisplaySchema):
-        # store old display schema
-        old_display_schema = getattr(project, 'display_schema', None)
-
         # register new display schema in project
         body = {'display_schema': display_schema}
         self.modify(project, body)
-
-        # delete old display schema
-        if old_display_schema:
-            old_display_schema.delete()

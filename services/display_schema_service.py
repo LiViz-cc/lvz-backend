@@ -70,8 +70,15 @@ class DisplaySchemaService:
         # save new display schema
         self.display_schema_dao.save(display_schema)
 
+        # store old display schema
+        old_display_schema = getattr(linked_project, 'display_schema', None)
+
         # register display_schema in project
         self.project_dao.change_display_schema(linked_project, display_schema)
+
+        # delete old display schema
+        if old_display_schema:
+            old_display_schema.delete()
 
         return display_schema
 
