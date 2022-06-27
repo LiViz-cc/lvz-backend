@@ -78,6 +78,7 @@ _logger = _generate_logger()
 
 
 def get_the_logger():
+    # singleton pattern
     return _logger
 
 
