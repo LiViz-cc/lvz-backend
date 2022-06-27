@@ -37,4 +37,4 @@ class LoginResource(Resource):
         email = body.get('email', None)
         password = body.get('password', None)
 
-        return self.user_service.signIn(email, password)
+        return self.user_service.login(email, password)

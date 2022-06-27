@@ -87,7 +87,7 @@ class UserService():
         logger.info("Created a user with email {}".format(body.get('email')))
         return user
 
-    def signIn(self, email: str, password: str):
+    def login(self, email: str, password: str):
         # pre-validate params
         if type(email) != str:
             raise InvalidParamError('Email (string) must be provided.')
