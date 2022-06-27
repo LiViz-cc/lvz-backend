@@ -21,7 +21,9 @@ class User(db.Document):
     data_sources = ListField(
         ReferenceField('DataSource', reverse_delete_rule=db.PULL))
 
-    uneditable_fields = ['created', 'modified']
+    # field cannot be edited by normal PUT methods
+    uneditable_fields = ['email', 'password', 'created',
+                         'modified', 'projects', 'data_sources']
 
     def hash_password(self):
         self.password = generate_password_hash(self.password).decode('utf8')

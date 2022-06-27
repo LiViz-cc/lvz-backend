@@ -22,4 +22,4 @@ class Project(db.Document):
         'ShareConfig', reverse_delete_rule=db.PULL))
 
     uneditable_fields = ['created', 'modified', 'created_by',
-                         'data_sources', 'display_schema', 'share_configs']
+                         'data_sources', 'share_configs']
