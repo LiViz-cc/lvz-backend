@@ -44,7 +44,8 @@ class ShareConfigService:
         share_config = self.share_config_dao.get_by_id(id)
 
         # check if password-protected
-        self.share_config_dao.assert_password_match(share_config, password)
+        if share_config.password_protected:
+            self.share_config_dao.assert_password_match(share_config, password)
 
         # remove password field for return
         share_config.desensitize()
@@ -137,24 +138,46 @@ class ShareConfigService:
 
         return {}
 
-    def change_password(self, id: str, user, old_password: str, new_password: str) -> ShareConfig:
+    def change_password(self,
+                        id: str,
+                        user: User,
+                        old_password: str,
+                        new_password: str,
+                        ) -> ShareConfig:
         # query project via id
         share_config = self.share_config_dao.get_by_id(id)
 
         if share_config.created_by != user:
             raise ForbiddenError()
 
+        modifing_dict = {}
+
         # check if password-protected
         if share_config.password_protected:
-            self.share_config_dao.assert_password_match(
-                share_config, old_password)
+            if new_password is not None:
+                '''protected_to_protected'''
+                self.share_config_dao.assert_password_match(
+                    share_config, old_password)
 
-        myguard.check_literaly.password(new_password, is_new=True)
+                myguard.check_literaly.password(
+                    new_password, is_new=True, password_alies='new_password')
+                modifing_dict.update({'password': new_password})
 
-        modifing_dict = {'password': new_password,
-                         'password_protected': True,
-                         'modified': datetime.datetime.utcnow}
+            else:
+                '''protected_to_not_protected'''
+                self.share_config_dao.assert_password_match(
+                    share_config, old_password)
 
+                modifing_dict.update({'password_protected': False})
+
+        else:
+            '''not_protected_to_protected'''
+            myguard.check_literaly.password(
+                new_password, is_new=True, password_alies='new_password')
+            modifing_dict.update({'password': new_password,
+                                  'password_protected': True})
+
+        modifing_dict['modified'] = datetime.datetime.utcnow
         # save share config
         self.share_config_dao.modify(share_config, modifing_dict)
 

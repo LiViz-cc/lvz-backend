@@ -3,6 +3,9 @@ import json
 from errors import ServerError
 from flask import Response
 from flask_jwt_extended.exceptions import NoAuthorizationError
+import traceback
+from utils import get_the_logger
+logger = get_the_logger()
 
 
 def response_wrapper(func):
