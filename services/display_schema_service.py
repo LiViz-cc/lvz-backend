@@ -39,6 +39,8 @@ class DisplaySchemaService:
         return display_schemas
 
     def create_display_schema(self, body: dict, jwt_id: str) -> DisplaySchema:
+        user = self.user_dao.get_user_by_id(jwt_id)
+
         # pre-validate params
         linked_project_id = body.get('linked_project', None)
         # if not linked_project_id:
@@ -49,6 +51,8 @@ class DisplaySchemaService:
         )
 
         linked_project = self.project_dao.get_by_id(linked_project_id)
+        if linked_project.created_by != user:
+            raise ForbiddenError()
 
         body['linked_project'] = linked_project
 
@@ -61,7 +65,6 @@ class DisplaySchemaService:
         display_schema.modified = curr_time
 
         # set created by
-        user = self.user_dao.get_user_by_id(jwt_id)
         display_schema.created_by = user
 
         # save new display schema
@@ -99,14 +102,17 @@ class DisplaySchemaService:
         # pre-process params
         linked_project_id = body.get('linked_project', None)
         if linked_project_id:
-            linked_project = self.project_dao.get_by_id(linked_project_id)
+            # linked_project = self.project_dao.get_by_id(linked_project_id)
 
-            # check authorization
-            if linked_project.created_by != display_schema.created_by:
-                raise ForbiddenError(
-                    'linked_project is not created by the user')
+            # # check authorization
+            # if linked_project.created_by != display_schema.created_by:
+            #     raise ForbiddenError(
+            #         'linked_project is not created by the user')
 
-            body['linked_project'] = linked_project
+            # body['linked_project'] = linked_project
+
+            raise ForbiddenError(
+                '"linked_project" cannot be changed after linked. Please create a new display schema.')
 
         # Forbid changing immutable field
         self.display_schema_dao.assert_fields_editable(body)
