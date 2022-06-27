@@ -55,7 +55,7 @@ class CheckingCenter():
 
         if object_id is None:
             raise InvalidParamError(
-                "The {} with such id is not found.".format(object_name))
+                "The id of {} cannot be null.".format(object_name))
 
         if not isinstance(object_id, str):
             raise InvalidParamError(
