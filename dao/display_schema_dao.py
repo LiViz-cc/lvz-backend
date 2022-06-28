@@ -1,4 +1,5 @@
 
+import copy
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
@@ -38,3 +39,16 @@ class DisplaySchemaDao:
             raise InvalidParamError(e.message)
         except LookupError as e:
             raise InvalidParamError(e.message)
+
+    def get_a_copy(self,  display_schema: DisplaySchema) -> DisplaySchema:
+        """
+        Deeply copy a display schema. Caution: Cloned document has not been saved to database yet.
+
+        Args:
+            display_schema (str): display schema that needs a deep copy
+
+        Returns:
+            DisplaySchema: cloned document (unsaved)
+        """
+        new_display_schema = copy.deepcopy(display_schema)
+        return new_display_schema

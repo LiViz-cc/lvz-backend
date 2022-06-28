@@ -1,4 +1,5 @@
 
+import copy
 from typing import List
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
@@ -120,3 +121,17 @@ class ProjectDao:
         # register new display schema in project
         body = {'display_schema': display_schema}
         self.modify(project, body)
+
+    def get_a_shallow_copy(self, project: Project) -> Project:
+        """
+        Shallowly copy a project. Caution: Cloned document has not been saved to database yet.
+
+        Args:
+            project (Project): project that needs a shallow copy
+
+        Returns:
+            Project: cloned document (unsaved)
+        """
+        # NOTE: a deepcopy of a MongoDB document is a shallow copy of the object itself
+        new_project = copy.deepcopy(project)
+        return new_project

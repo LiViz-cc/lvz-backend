@@ -6,6 +6,7 @@ from services import ProjectService
 from utils.guard import myguard
 from utils.jwt import get_current_user
 from utils.logger import get_the_logger
+from errors import InvalidParamError
 
 from .response_wrapper import response_wrapper
 
@@ -40,16 +41,28 @@ class ProjectsResource(Resource):
         public = body.get('public', None)
         data_source_ids = body.get('data_sources', None)
         display_schema_id = body.get('display_schema', None)
+        clone = body.get('clone', None)
+        project_id = body.get('project', None)
 
-        myguard.check_literaly.check_type([
-            (bool, public, 'public', True),
-            (list, data_source_ids,  'data_sources', True),
-            (str, display_schema_id,  'display_schema', True)
-        ])
+        if clone:
+            # Clone a project from existed one
+            if clone == 'shallow':
+                myguard.check_literaly.object_id(project_id, 'project')
+                jwt_id = get_jwt_identity()
+                return self.project_service.shallow_copy(project_id, jwt_id)
+            else:
+                raise InvalidParamError('"clone" field only accepts "shallow')
+        else:
+            # Create a new project
+            myguard.check_literaly.check_type([
+                (bool, public, 'public', True),
+                (list, data_source_ids,  'data_sources', True),
+                (str, display_schema_id,  'display_schema', True)
+            ])
 
-        user = get_current_user()
+            user = get_current_user()
 
-        return self.project_service.create_project(body, public, data_source_ids, display_schema_id, user)
+            return self.project_service.create_project(body, public, data_source_ids, display_schema_id, user)
 
 
 class ProjectResource(Resource):

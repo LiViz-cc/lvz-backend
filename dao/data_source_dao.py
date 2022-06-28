@@ -44,7 +44,7 @@ class DataSourceDao:
 
     def get_a_copy_by_id(self, data_source_id: str) -> DataSource:
         """
-        Deep copy a data source. Caution: Cloned document has not been saved yet.
+        Deeply copy a data source. Caution: Cloned document has not been saved yet.
 
         Args:
             data_source_id (str): data_source that needs to make a deep copy
@@ -58,10 +58,10 @@ class DataSourceDao:
 
     def get_a_copy(self, data_source: DataSource) -> DataSource:
         """
-        Deep copy a data source. Caution: Cloned document has not been saved yet.
+        Deeply copy a data source. Caution: Cloned document has not been saved to database yet.
 
         Args:
-            data_source_id (str): data_source that needs to make a deep copy
+            data_source (str): data_source that needs to make a deep copy
 
         Returns:
             DataSource: cloned document (unsaved)

@@ -67,19 +67,21 @@ class DataSourceResource(Resource):
         return self.data_sources_service.get_data_source_by_id(id, user_id)
 
     @response_wrapper
-    @jwt_required(optional=True)
+    @jwt_required()
     def put(self, id):
         # get request body dict
         body = request.get_json()
         user_id = get_jwt_identity()
 
         logger.info(
-            'PUT data_source with body {} and jwt_id {}'.format(body, user_id))
+            'PUT data_source {} with body {} and jwt_id {}'.format(id, body, user_id))
+
+        myguard.check_literaly.object_id(id, 'data source id')
 
         return self.data_sources_service.edit_data_source(id, body, user_id)
 
     @response_wrapper
-    @jwt_required(optional=True)
+    @jwt_required()
     def delete(self, id):
         user_id = get_jwt_identity()
         logger.info(

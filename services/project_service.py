@@ -145,7 +145,6 @@ class ProjectService:
         return {}
 
     def add_data_sources(self, project_id: str, data_source_ids: List[str], jwt_id: str):
-        # TODO: need an API to implement it
         # check authorization
         user = self.user_dao.get_user_by_id(jwt_id)
 
@@ -171,7 +170,6 @@ class ProjectService:
         return project
 
     def remove_data_sources(self, project_id: str, data_source_ids: List[str], jwt_id: str):
-        # TODO: need an API to implement it
         # check authorization
         user = self.user_dao.get_user_by_id(jwt_id)
 
@@ -195,3 +193,31 @@ class ProjectService:
         # re-query project
         project = self.project_dao.get_by_id(project_id)
         return project
+
+    def shallow_copy(self, project_id: str, jwt_id: str) -> Project:
+        # TODO: need an API to implement it
+        user = self.user_dao.get_user_by_id(jwt_id)
+
+        # query project
+        project = self.project_dao.get_by_id(project_id)
+        if project.created_by != user:
+            raise ForbiddenError()
+
+        display_schema = getattr(project, 'display_schema', None)
+
+        # get a shallow copy
+        new_project = self.project_dao.get_a_shallow_copy(project)
+
+        # change meta-data
+        current_time = datetime.datetime.utcnow
+        new_project['created_by'] = user
+        new_project['created'] = current_time
+        new_project['modified'] = current_time
+
+        if display_schema:
+            new_display_schema = self.display_schema_dao.get_a_copy(
+                display_schema)
+            setattr(new_project, 'display_schema', new_display_schema)
+
+        self.project_dao.save(new_project)
+        return new_project
