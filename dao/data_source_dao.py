@@ -35,6 +35,8 @@ class DataSourceDao:
         # update project
         try:
             data_source.modify(**mutation_body)
+        except IndexError as e:
+            raise InvalidParamError(e.args)
         except ValidationError as e:
             raise InvalidParamError(e.message)
         except LookupError as e:
