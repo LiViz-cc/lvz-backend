@@ -9,9 +9,9 @@ from utils.guard import myguard
 
 
 class UserDao:
-    def save(self, user: User) -> None:
+    def save(self, user: User, *args, **kwargs) -> None:
         try:
-            user.save()
+            user.save(*args, **kwargs)
         except ValidationError as e:
             raise InvalidParamError(e.message)
         except NotUniqueError:

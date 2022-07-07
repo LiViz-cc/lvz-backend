@@ -18,7 +18,7 @@ class DataSourcesService:
         self.project_dao = ProjectDao()
         self.data_source_dao = DataSourceDao()
 
-    def get_data_sources(self, args, jwt_id) -> List[DataSource]:
+    def get_data_sources(self, args, jwt_id:str) -> List[DataSource]:
         # validate args and construct query dict
         query = {}
         if 'public' in args:

@@ -85,11 +85,11 @@ class ProjectDao:
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
-    def save(self, project: Project):
+    def save(self, project: Project, *args, **kwargs):
         myguard.check_literaly.is_not_null(project, 'Project')
 
         try:
-            project.save()
+            project.save(*args, **kwargs)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
@@ -134,4 +134,8 @@ class ProjectDao:
         """
         # NOTE: a deepcopy of a MongoDB document is a shallow copy of the object itself
         new_project = copy.deepcopy(project)
+
+        # # TODO: is it okay to change id by this?
+        # if not new_project.modify(id=0):
+        #     raise InvalidParamError('when modify a new project')
         return new_project

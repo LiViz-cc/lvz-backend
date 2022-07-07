@@ -219,5 +219,5 @@ class ProjectService:
                 display_schema)
             setattr(new_project, 'display_schema', new_display_schema)
 
-        self.project_dao.save(new_project)
+        self.project_dao.save(new_project, force_insert=True)
         return new_project

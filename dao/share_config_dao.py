@@ -36,9 +36,9 @@ class ShareConfigDao:
             raise NotFoundError('share_configs', 'id={}'.format(id))
         return share_config
 
-    def save(self, share_config: ShareConfig) -> None:
+    def save(self, share_config: ShareConfig, *args, **kwargs) -> None:
         try:
-            share_config.save()
+            share_config.save(*args, **kwargs)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 

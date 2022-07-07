@@ -59,7 +59,7 @@ class DataSourceResource(Resource):
     @jwt_required(optional=True)
     def get(self, id):
         myguard._check.object_id(id)
-        user_id = get_jwt_identity()
+        user_id:str = get_jwt_identity()
 
         logger.info(
             'GET data_source with id {} and jwt_id {}'.format(id, user_id))

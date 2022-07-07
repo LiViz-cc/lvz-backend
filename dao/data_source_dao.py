@@ -16,10 +16,10 @@ class DataSourceDao:
             raise NotFoundError('data source', 'id={}'.format(id))
 
         return data_source
-
-    def save(self, data_source: DataSource) -> None:
+    
+    def save(self, data_source: DataSource, *args, **kwargs) -> None:
         try:
-            data_source.save()
+            data_source.save(*args, **kwargs)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 

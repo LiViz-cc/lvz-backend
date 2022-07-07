@@ -8,10 +8,10 @@ from utils.guard import myguard
 
 
 class DisplaySchemaDao:
-    def save(self, display_schema: DisplaySchema) -> None:
+    def save(self, display_schema: DisplaySchema, *args, **kwargs) -> None:
         myguard.check_literaly.is_not_null(display_schema, 'display_schema')
         try:
-            display_schema.save()
+            display_schema.save(*args, **kwargs)
         except ValidationError as e:
             raise InvalidParamError(e.message)
 
