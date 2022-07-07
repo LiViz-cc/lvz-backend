@@ -1,5 +1,7 @@
 import json
 
+from jwt import ExpiredSignatureError, InvalidTokenError
+
 from errors import ServerError
 from flask import Response
 from flask_jwt_extended.exceptions import NoAuthorizationError
@@ -55,6 +57,8 @@ def response_wrapper(func):
         except ServerError as e:
             # wrap server error with given status and error title, detail
             return {'title': e.title, 'status': e.status, 'detail': e.detail}, e.status
+        except InvalidTokenError as e:
+            return {'title': 'Token Invalid Error', 'status': 401, 'detail': str(e)}, 401
         except Exception as e:
             # wrap other exceptions with status 500
             return {'title': 'Internal Server Error', 'status': 500, 'detail': str(e)}, 500
