@@ -98,6 +98,11 @@ jobs:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
         container-name: ${{ env.CONTAINER_NAME }}
         image: ${{ steps.build-image.outputs.image }}
+    
+    - name: Stop task started by this service
+      id: stop-task
+      run: |
+        aws ecs list-tasks --cluster ${{ env.ECS_CLUSTER }} --service-name ${{ env.ECS_SERVICE }} | grep arn | sed 's/^.*"\(.*\)",*$/\1/' | xargs aws ecs stop-task --cluster ${{ env.ECS_CLUSTER }} --reason github-actions-deploy --task | xargs echo
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
