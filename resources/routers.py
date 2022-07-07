@@ -5,12 +5,15 @@ from .auth import LoginResource, SignupResource
 from .data_source import DataSourceResource, DataSourcesResource
 from .display_schema import DisplaySchemaResource, DisplaySchemasResource
 from .project import ProjectDataSourcesResource, ProjectResource, ProjectsResource
+from .root import RootResource
 from .share_config import (ShareConfigPasswordResource, ShareConfigResource,
                            ShareConfigsResource)
 from .user import UserPasswordResource, UserResource
 
 
 def initialize_routes(api: Api):
+    api.add_resource(RootResource, '/')
+
     api.add_resource(SignupResource, '/auth/signup')
     api.add_resource(LoginResource, '/auth/login')
 
