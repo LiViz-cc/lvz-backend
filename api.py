@@ -41,4 +41,15 @@ initialize_routes(api)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # load start config
+    env = os.getenv('ENV')
+    port = int(os.getenv('PORT'))
+
+    # start server
+    if env == 'development':
+        app.run(debug=True, port=port)
+    elif env == 'production':
+        from waitress import serve
+        serve(app, host="0.0.0.0", port=port)
+    else:
+        raise RuntimeError('Fail to start server with ENV=%s!' % env)
