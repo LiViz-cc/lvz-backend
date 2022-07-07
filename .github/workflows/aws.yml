@@ -69,10 +69,11 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
     
     - name: Create `.env` file
+      id: create-dot-env
       run: |
         cat > .env << __EOF__
-        MONGODB_HOST=${{ secrets.DOT_ENV_JWT_SECRET_KEY }}
-        JWT_SECRET_KEY=${{ secrets.DOT_ENV_MONGODB_HOST }}
+        MONGODB_HOST=${{ secrets.DOT_ENV_MONGODB_HOST }}
+        JWT_SECRET_KEY=${{ secrets.DOT_ENV_JWT_SECRET_KEY }}
         ENV=production
         PORT=5000
         __EOF__
