@@ -1,4 +1,3 @@
-from cmath import log
 import os
 
 from dotenv import load_dotenv
