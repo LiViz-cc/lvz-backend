@@ -1,7 +1,6 @@
 
 import copy
 
-from requests import delete
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
@@ -67,4 +66,3 @@ class DisplaySchemaDao:
             except DoesNotExist as e:
                 raise NotFoundError('display schema', 'id={}'.format(
                     getattr(display_schema, 'id', 'None')))
-
