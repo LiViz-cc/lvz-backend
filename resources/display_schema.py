@@ -1,6 +1,7 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
+from errors import ForbiddenError
 from services import DisplaySchemaService
 
 from .response_wrapper import response_wrapper
@@ -54,6 +55,9 @@ class DisplaySchemaResource(Resource):
     @response_wrapper
     @jwt_required(optional=True)
     def delete(self, id):
+        raise ForbiddenError(
+            'Deleting a display schema linked to a project is not allowed')
+
         user_id = get_jwt_identity()
 
         return self.display_schema_service.delete_display_schema(id, user_id)

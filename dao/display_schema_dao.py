@@ -1,5 +1,7 @@
 
 import copy
+
+from requests import delete
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
@@ -52,3 +54,17 @@ class DisplaySchemaDao:
         """
         new_display_schema = copy.deepcopy(display_schema)
         return new_display_schema
+
+    def delete(self, display_schema: DisplaySchema) -> None:
+        if display_schema:
+            myguard.check_literaly.check_type([
+                (DisplaySchema, display_schema, "display schema", False)
+            ])
+
+            # TODO: add more error handling
+            try:
+                display_schema.delete()
+            except DoesNotExist as e:
+                raise NotFoundError('display schema', 'id={}'.format(
+                    getattr(display_schema, 'id', 'None')))
+

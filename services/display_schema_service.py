@@ -7,6 +7,7 @@ from dao import (DataSourceDao, DisplaySchemaDao, ProjectDao, ShareConfigDao,
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
+from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 from utils.guard import myguard
 
 
@@ -71,14 +72,18 @@ class DisplaySchemaService:
         self.display_schema_dao.save(display_schema)
 
         # store old display schema
-        old_display_schema = getattr(linked_project, 'display_schema', None)
+        # TODO: getattr should be moved to DAO
+        try:
+            old_display_schema = getattr(
+                linked_project, 'display_schema', None)
+        except DoesNotExist as e:
+            old_display_schema = None
 
         # register display_schema in project
         self.project_dao.change_display_schema(linked_project, display_schema)
 
         # delete old display schema
-        if old_display_schema:
-            old_display_schema.delete()
+        self.display_schema_dao.delete(old_display_schema)
 
         return display_schema
 

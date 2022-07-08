@@ -126,7 +126,7 @@ class CheckingCenter():
         for type, para, name, nullable in check_list:
             if para is None:
                 if not nullable:
-                    InvalidParamError('{} cannot be null.'.format(name))
+                    raise InvalidParamError('{} cannot be null.'.format(name))
 
             elif not isinstance(para, type):
                 raise InvalidParamError(
