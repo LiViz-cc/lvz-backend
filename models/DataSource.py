@@ -15,6 +15,6 @@ class DataSource(db.Document):
     public = BooleanField(required=True, default=False)
     description = StringField(required=True, default='', max_length=1000)
     static_data = StringField()  # temp, data JSON
-    type = StringField(required=True)
+    data_type = StringField(required=True)
 
     uneditable_fields = ['created', 'modified', 'created_by']
