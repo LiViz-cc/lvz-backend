@@ -6,6 +6,7 @@ from errors import ServerError
 from flask import Response
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from jwt import ExpiredSignatureError, InvalidTokenError
+from mongoengine.errors import MongoEngineException
 from utils import get_the_logger
 
 logger = get_the_logger()
@@ -64,9 +65,19 @@ def response_wrapper(func):
             detail = '' if env != 'development' else str(e)
 
             return {'title': 'Token Invalid Error', 'status': 401, 'detail': detail}, 401
+        except MongoEngineException as e:
+            logger.error('Type:{}, Detail:{}'.format(
+                e.__class__.__name__, str(e)))
+
+            if env == 'development':
+                return {'title': 'MongoEngine Exception', 'status': 500, 'detail': str(e)}, 500
+            else:
+                return {'title': 'Internal Server Error', 'status': 500, 'detail': ''}, 500
         except Exception as e:
             # return no detail if not in development
             detail = '' if env != 'development' else str(e)
+            logger.error('Type:{}, Detail:{}'.format(
+                e.__class__.__name__, str(e)))
 
             # wrap other exceptions with status 500
             return {'title': 'Internal Server Error', 'status': 500, 'detail': detail}, 500
