@@ -1,4 +1,7 @@
 
+import email
+
+import utils
 from flask import request
 from flask_restful import Resource
 from services import (DataSourcesService, DisplaySchemaService, ProjectService,
@@ -20,7 +23,22 @@ class SignupResource(Resource):
         # get request body dict
         body = request.get_json()
 
-        return self.user_service.signUp(body)
+        # Unpack body
+        email = body.get('email', None)
+        password = body.get('password', None)
+
+        # check literally
+        utils.myguard.check_literaly.check_type([
+            (str, email, 'email', False),
+            (str, password, 'password', False)
+        ])
+        utils.myguard.check_literaly.password(
+            password=password,
+            is_new=True,
+            password_alies='password'
+        )
+
+        return self.user_service.signUp(email, password)
 
 
 class LoginResource(Resource):

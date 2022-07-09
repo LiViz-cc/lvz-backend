@@ -8,6 +8,7 @@ from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from flask_jwt_extended import create_access_token
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
+import utils
 from utils.guard import myguard
 from utils.logger import get_the_logger
 
@@ -63,27 +64,27 @@ class UserService():
         user.desensitize()
         return user
 
-    def signUp(self, body: dict):
-        # pre-validate params
-        password = body.get('password', None)
-        myguard.check_literaly.password(password=password, is_new=True)
+    def signUp(self, email: str, password: str, *args, **kwargs):
+        # Pack body
+        body = {email: email, password: password}
 
         # construct new user object
         user = User(**body)
 
         # set time
-        curr_time = datetime.datetime.utcnow
+        curr_time = utils.get_utcnow()
         user.created = curr_time
         user.modified = curr_time
 
         # hash passord
-        user.hash_password()  # must manually call this function before save
+        # must manually call this function before save
+        self.user_dao.hash_password(user)
 
         # save new user
         self.user_dao.save(user)
 
         # return desensitized created user
-        user.desensitize()
+        self.user_dao.desensitize(user)
         logger.info("Created a user with email {}".format(body.get('email')))
         return user
 
