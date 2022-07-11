@@ -1,9 +1,10 @@
 
-from flask import Request, request
+import utils
+from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from services.share_config_service import ShareConfigService
-from utils import get_current_user, get_the_logger, myguard
+from utils import get_the_logger
 
 from .response_wrapper import response_wrapper
 
@@ -28,13 +29,10 @@ class ShareConfigsResource(Resource):
             list of ShareConfigs
         """
 
-        # get request args dict
-        args = request.args
-
         # check authorization
-        user = get_current_user()
+        jwt_id = get_jwt_identity()
 
-        return self.share_config_service.get_share_configs(args, user)
+        return self.share_config_service.get_share_configs(jwt_id)
 
     @response_wrapper
     @jwt_required()
@@ -43,15 +41,20 @@ class ShareConfigsResource(Resource):
         body = request.get_json()
         body: dict
 
-        # get creator user
-        user = get_current_user()
+        # check authorization
+        jwt_id = get_jwt_identity()
 
-        # pre-validate params (project)
-        project_id = body.get('linked_project', None)
-        password_protected = body.get('password_protected', None)
-        password = body.get('password', None)
+        # pre-validate params
+        name, project_id, password_protected, password = [
+            body.get(x) for x in ['name', 'linked_project', 'password_protected', 'password']]
 
-        return self.share_config_service.create_share_config(body, user, project_id, password_protected, password)
+        utils.myguard.check_literaly.check_type([
+            (str, name, 'name', False),
+            (str, project_id, 'linked_project_id', False),
+            (bool, password_protected, 'password_protected', False)
+        ])
+
+        return self.share_config_service.create_share_config(jwt_id, name, project_id, password_protected, password)
 
 
 class ShareConfigResource(Resource):
@@ -73,26 +76,28 @@ class ShareConfigResource(Resource):
     @response_wrapper
     @jwt_required()
     def put(self, id):
-        current_user = get_current_user()
+        # check authorization
+        jwt_id = get_jwt_identity()
 
-        # get password
+        # pre-validate params
         body = request.get_json()
-        password = body.get('password')
-        if password is not None:
-            del body['password']
 
-        return self.share_config_service.edit_by_id(id, current_user, password=password, body=body)
+        password = body.get('password')
+        name = body.get('name')
+
+        return self.share_config_service.edit_by_id(id, jwt_id, password=password, name=name)
 
     @response_wrapper
     @jwt_required()
     def delete(self, id):
-        current_user = get_current_user()
+        # check authorization
+        jwt_id = get_jwt_identity()
 
         # get password
         body = request.get_json()
         password = body.get('password')
 
-        return self.share_config_service.delete_by_id(id=id, user=current_user, password=password)
+        return self.share_config_service.delete_by_id(id=id, jwt_id=jwt_id, password=password)
 
 
 class ShareConfigPasswordResource(Resource):
@@ -103,7 +108,8 @@ class ShareConfigPasswordResource(Resource):
     @response_wrapper
     @jwt_required()
     def post(self, id):
-        current_user = get_current_user()
+        # check authorization
+        jwt_id = get_jwt_identity()
 
         # get message body
         body = request.get_json()
@@ -112,7 +118,7 @@ class ShareConfigPasswordResource(Resource):
 
         return self.share_config_service.change_password(
             id=id,
-            user=current_user,
+            jwt_id=jwt_id,
             old_password=old_password,
             new_password=new_password
         )
