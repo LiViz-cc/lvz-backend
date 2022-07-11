@@ -66,7 +66,7 @@ class UserService():
 
     def signUp(self, email: str, password: str, *args, **kwargs):
         # Pack body
-        body = {email: email, password: password}
+        body = {'email': email, 'password': password}
 
         # construct new user object
         user = User(**body)
