@@ -32,9 +32,6 @@ class ShareConfigService:
         # create a new list for return
         share_configs_list = []
 
-        for share_config in share_configs:
-            share_config.desensitize()
-            share_configs_list.append(share_config)
 
         logger.info("Query processed. Detail: {}".format(query))
         return share_configs_list
@@ -48,7 +45,6 @@ class ShareConfigService:
             self.share_config_dao.assert_password_match(share_config, password)
 
         # remove password field for return
-        share_config.desensitize()
         return share_config
 
     def create_share_config(self,
@@ -92,7 +88,6 @@ class ShareConfigService:
         # update user's and project's reference to share_config
         self.project_dao.add_share_config(project, share_config)
 
-        share_config.desensitize()
         return share_config
 
     def edit_by_id(self, id: str, user, password: str, body: dict) -> ShareConfig:
@@ -120,7 +115,6 @@ class ShareConfigService:
         # update project
         self.share_config_dao.modify(share_config, body)
 
-        share_config.desensitize()
         return share_config
 
     def delete_by_id(self, id: str, user, password: str) -> dict:
@@ -181,5 +175,4 @@ class ShareConfigService:
         # save share config
         self.share_config_dao.modify(share_config, modifing_dict)
 
-        share_config.desensitize()
         return share_config
