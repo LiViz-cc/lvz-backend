@@ -57,6 +57,7 @@ class ProjectService:
         return project
 
     def create_project(self,
+                       name: str,
                        is_public: bool,
                        data_source_ids: str,
                        display_schema_id: str,
@@ -65,7 +66,7 @@ class ProjectService:
         user = self.user_dao.get_user_by_id(jwt_id)
 
         # pack body
-        body = {}
+        body = {'name': name}
 
         # pre-validate params (is_public)
         if type(is_public) != bool:
@@ -158,7 +159,7 @@ class ProjectService:
             raise ForbiddenError()
 
         # delete project
-        project.delete()
+        self.project_dao.delete(project)
 
         return {}
 

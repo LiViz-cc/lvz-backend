@@ -145,7 +145,7 @@ class DataSourcesService:
             raise ForbiddenError()
 
         # delete project
-        data_source.delete()
+        self.data_source_dao.delete(data_source)
 
         return {}
 

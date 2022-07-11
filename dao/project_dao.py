@@ -139,3 +139,16 @@ class ProjectDao:
         # if not new_project.modify(id=0):
         #     raise InvalidParamError('when modify a new project')
         return new_project
+
+    def delete(self, project: Project, *args, **kwargs) -> None:
+        if project:
+            myguard.check_literaly.check_type([
+                (Project, project, "project", False)
+            ])
+
+            # TODO: add more error handling
+            try:
+                project.delete(*args, **kwargs)
+            except DoesNotExist as e:
+                raise NotFoundError('project', 'id={}'.format(
+                    getattr(project, 'id', 'None')))

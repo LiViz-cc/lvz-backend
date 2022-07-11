@@ -54,3 +54,16 @@ class ShareConfigDao:
         for field_name in ShareConfig.uneditable_fields:
             if body.get(field_name, None):
                 raise NotMutableError(ShareConfig.__name__, field_name)
+
+    def delete(self, share_config: ShareConfig, *args, **kwargs) -> None:
+        if share_config:
+            myguard.check_literaly.check_type([
+                (ShareConfig, share_config, "share config", False)
+            ])
+
+            # TODO: add more error handling
+            try:
+                share_config.delete(*args, **kwargs)
+            except DoesNotExist as e:
+                raise NotFoundError('share config', 'id={}'.format(
+                    getattr(share_config, 'id', 'None')))

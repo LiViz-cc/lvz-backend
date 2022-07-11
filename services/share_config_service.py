@@ -143,7 +143,7 @@ class ShareConfigService:
         self.share_config_dao.assert_password_match(share_config, password)
 
         # delete project
-        share_config.delete()
+        self.share_config_dao.delete(share_config)
 
         return {}
 

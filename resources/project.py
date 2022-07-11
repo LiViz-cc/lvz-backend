@@ -48,10 +48,10 @@ class ProjectsResource(Resource):
 
         logger.info('POST project with body {}'.format(body))
 
-        param_names = ['public', 'data_sources',
+        param_names = ['name', 'public', 'data_sources',
                        'display_schema', 'clone', 'project']
 
-        public, data_source_ids, display_schema_id, clone, project_id = [
+        name, public, data_source_ids, display_schema_id, clone, project_id = [
             body.get(x) for x in param_names]
 
         if clone:
@@ -65,6 +65,7 @@ class ProjectsResource(Resource):
         else:
             # Create a new project
             utils.myguard.check_literaly.check_type([
+                (str, name, 'name', False),
                 (bool, public, 'public', True),
                 (list, data_source_ids,  'data_sources', True),
                 (str, display_schema_id,  'display_schema', True)
@@ -72,7 +73,7 @@ class ProjectsResource(Resource):
 
             jwt_id = get_jwt_identity()
 
-            return self.project_service.create_project(public, data_source_ids, display_schema_id, jwt_id)
+            return self.project_service.create_project(name, public, data_source_ids, display_schema_id, jwt_id)
 
 
 class ProjectResource(Resource):
