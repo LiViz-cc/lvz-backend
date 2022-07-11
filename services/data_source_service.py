@@ -9,6 +9,7 @@ from errors import (ForbiddenError, InvalidParamError, NotFoundError,
 from models import DataSource, User
 from models.Project import Project
 from mongoengine.errors import DoesNotExist, ValidationError
+import utils
 from utils.guard import myguard
 
 
@@ -18,22 +19,21 @@ class DataSourcesService:
         self.project_dao = ProjectDao()
         self.data_source_dao = DataSourceDao()
 
-    def get_data_sources(self, args, jwt_id:str) -> List[DataSource]:
+    def get_data_sources(self, is_public: bool, created_by: str, jwt_id: str) -> List[DataSource]:
         # validate args and construct query dict
         query = {}
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                query['public'] = False
-            if args['public'].lower() == 'true':
-                query['public'] = True
-        if 'created_by' in args:
+
+        if is_public is not None:
+            query['public'] = is_public
+
+        if created_by is not None:
             # check authorization
             myguard.check_literaly.user_id(jwt_id)
             user = self.user_dao.get_user_by_id(jwt_id)
 
-            if args['created_by'] != str(user.id):
+            if created_by != str(user.id):
                 raise ForbiddenError()
-            query['created_by'] = user
+            query['created_by'] = created_by
 
         # query data sources with query dict
         data_sources = DataSource.objects(**query)
@@ -53,7 +53,25 @@ class DataSourcesService:
 
         return data_source
 
-    def create_data_source(self, body, jwt_id) -> DataSource:
+    def create_data_source(self,
+                           name: str,
+                           public: bool,
+                           description: str,
+                           static_data: str,
+                           data_type: str,
+                           jwt_id: str) -> DataSource:
+
+        # prepare body
+        body = {}
+
+        params = [name, public, description, static_data, data_type]
+        param_names = ['name', 'public',
+                       'description', 'static_data', 'data_type']
+
+        for param_name, param in zip(param_names, params):
+            if param is not None:
+                body[param_name] = param
+
         # pre-validate params
         # construct new data source object
         data_source = DataSource(**body)
@@ -76,8 +94,24 @@ class DataSourcesService:
 
         return data_source
 
-    def edit_data_source(self, id, body, jwt_id) -> DataSource:
-        # pre-validate params
+    def edit_data_source(self,
+                         id: str,
+                         name: str,
+                         public: bool,
+                         description: str,
+                         static_data: str,
+                         data_type: str, jwt_id) -> DataSource:
+
+        # prepare body
+        body = {}
+
+        params = [name, public, description, static_data, data_type]
+        param_names = ['name', 'public',
+                       'description', 'static_data', 'data_type']
+
+        for param_name, param in zip(param_names, params):
+            if param is not None:
+                body[param_name] = param
 
         # query project via id
         data_source = self.data_source_dao.get_by_id(id)
