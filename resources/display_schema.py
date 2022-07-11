@@ -3,6 +3,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from errors import ForbiddenError
 from services import DisplaySchemaService
+import utils
 
 from .response_wrapper import response_wrapper
 
@@ -19,7 +20,18 @@ class DisplaySchemasResource(Resource):
         args = request.args
         user_id = get_jwt_identity()
 
-        return self.display_schema_service.get_display_schemas(args, user_id)
+        # prepare `is_public`
+        is_public = None
+        if 'public' in args:
+            if args['public'].lower() == 'false':
+                is_public = False
+            if args['public'].lower() == 'true':
+                is_public = True
+
+        # prepare `created_by`
+        created_by = args.get('created_by')
+
+        return self.display_schema_service.get_display_schemas(is_public, created_by, user_id)
 
     @response_wrapper
     @jwt_required()
@@ -28,7 +40,21 @@ class DisplaySchemasResource(Resource):
         body = request.get_json()
         user_id = get_jwt_identity()
 
-        return self.display_schema_service.create_display_schema(body, user_id)
+        param_names = ['name', 'public', 'description',
+                       'echarts_option', 'linked_project']
+        name, public, description, echarts_option, linked_project_id = [
+            body.get(param_name) for param_name in param_names]
+
+        # pre-validate params
+        utils.myguard.check_literaly.check_type([
+            (str, name, 'name', False),
+            (bool, public, 'public', True),
+            (str, description, 'description', True),
+            (str, echarts_option, 'echarts_option', True),
+            (str, linked_project_id, 'linked_project', False)]
+        )
+
+        return self.display_schema_service.create_display_schema(name, public, description, echarts_option, linked_project_id, user_id)
 
 
 class DisplaySchemaResource(Resource):
@@ -50,7 +76,21 @@ class DisplaySchemaResource(Resource):
         body = request.get_json()
         user_id = get_jwt_identity()
 
-        return self.display_schema_service.edit_display_schema(id, body, user_id)
+        param_names = ['name', 'public', 'description',
+                       'echarts_option', 'linked_project']
+        name, public, description, echarts_option, linked_project_id = [
+            body.get(param_name) for param_name in param_names]
+
+        # pre-validate params
+        utils.myguard.check_literaly.check_type([
+            (str, name, 'name', True),
+            (bool, public, 'public', True),
+            (str, description, 'description', True),
+            (str, echarts_option, 'echarts_option', True),
+            (str, linked_project_id, 'linked_project', True)]
+        )
+
+        return self.display_schema_service.edit_display_schema(id, name, public, description, echarts_option, linked_project_id, user_id)
 
     @response_wrapper
     @jwt_required(optional=True)
