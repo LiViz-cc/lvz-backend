@@ -71,6 +71,8 @@ class UserDao:
             raise InvalidParamError(e.message)
 
     def hash_password(self, user: User):
+        if not user:
+            raise InvalidParamError('User for hashing password cannot be null')
         if not hasattr(user, 'password'):
             raise InvalidParamError(
                 'desentitized user has no password attributes')

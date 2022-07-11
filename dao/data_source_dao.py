@@ -16,7 +16,7 @@ class DataSourceDao:
             raise NotFoundError('data source', 'id={}'.format(id))
 
         return data_source
-    
+
     def save(self, data_source: DataSource, *args, **kwargs) -> None:
         try:
             data_source.save(*args, **kwargs)
@@ -68,3 +68,16 @@ class DataSourceDao:
         """
         new_data_source = copy.deepcopy(data_source)
         return new_data_source
+
+    def delete(self, data_source: DataSource, *args, **kwargs) -> None:
+        if data_source:
+            myguard.check_literaly.check_type([
+                (DataSource, data_source, "Data source", False)
+            ])
+
+            # TODO: add more error handling
+            try:
+                data_source.delete(*args, **kwargs)
+            except DoesNotExist as e:
+                raise NotFoundError('Data source', 'id={}'.format(
+                    getattr(data_source, 'id', 'None')))

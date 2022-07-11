@@ -7,7 +7,7 @@ from utils.guard import myguard
 from utils.logger import get_the_logger
 
 from .response_wrapper import response_wrapper
-
+import utils
 logger = get_the_logger()
 
 
@@ -21,12 +21,23 @@ class DataSourcesResource(Resource):
     def get(self):
         # get request args dict
         args = request.args
-        user_id = get_jwt_identity()
+        jwt_id = get_jwt_identity()
 
         logger.info(
-            'GET data_sources with args {} and jwt_id {}'.format(args, user_id))
+            'GET data_sources with args {} and jwt_id {}'.format(args, jwt_id))
 
-        return self.data_sources_service.get_data_sources(args, user_id)
+        # prepare `is_public`
+        is_public = None
+        if 'public' in args:
+            if args['public'].lower() == 'false':
+                is_public = False
+            if args['public'].lower() == 'true':
+                is_public = True
+
+        # prepare `created_by`
+        created_by = args.get('created_by')
+
+        return self.data_sources_service.get_data_sources(is_public, created_by, jwt_id)
 
     @response_wrapper
     @jwt_required()
@@ -47,7 +58,22 @@ class DataSourcesResource(Resource):
             return self.data_sources_service.clone_by_id(data_source_id, jwt_id)
         else:
             # create a data source with information in JSON body
-            return self.data_sources_service.create_data_source(body, jwt_id)
+            name = body.get('name')
+            public = body.get('public')
+            description = body.get('description')
+            static_data = body.get('namstatic_datae')
+            data_type = body.get('data_type')
+
+            # check type
+            utils.myguard.check_literaly.check_type([
+                (str, name, 'name', False),
+                (bool, public, 'public', True),
+                (str, description, 'description', True),
+                (str, static_data, 'static_data', True),
+                (str, data_type, 'data_type', False)
+            ])
+
+            return self.data_sources_service.create_data_source(name, public, description, static_data, data_type, jwt_id)
 
 
 class DataSourceResource(Resource):
@@ -59,7 +85,7 @@ class DataSourceResource(Resource):
     @jwt_required(optional=True)
     def get(self, id):
         myguard._check.object_id(id)
-        user_id:str = get_jwt_identity()
+        user_id: str = get_jwt_identity()
 
         logger.info(
             'GET data_source with id {} and jwt_id {}'.format(id, user_id))
@@ -71,14 +97,29 @@ class DataSourceResource(Resource):
     def put(self, id):
         # get request body dict
         body = request.get_json()
-        user_id = get_jwt_identity()
+        jwt_id = get_jwt_identity()
+
+        name = body.get('name')
+        public = body.get('public')
+        description = body.get('description')
+        static_data = body.get('namstatic_datae')
+        data_type = body.get('data_type')
+
+        # check type
+        utils.myguard.check_literaly.check_type([
+            (str, name, 'name', True),
+            (bool, public, 'public', True),
+            (str, description, 'description', True),
+            (str, static_data, 'static_data', True),
+            (str, data_type, 'data_type', True)
+        ])
 
         logger.info(
-            'PUT data_source {} with body {} and jwt_id {}'.format(id, body, user_id))
+            'PUT data_source {} with body {} and jwt_id {}'.format(id, body, jwt_id))
 
         myguard.check_literaly.object_id(id, 'data source id')
 
-        return self.data_sources_service.edit_data_source(id, body, user_id)
+        return self.data_sources_service.edit_data_source(id, name, public, description, static_data, data_type, jwt_id)
 
     @response_wrapper
     @jwt_required()

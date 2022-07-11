@@ -20,22 +20,22 @@ class ProjectService:
         self.display_schema_dao = DisplaySchemaDao()
         self.share_config_dao = ShareConfigDao()
 
-    def get_projects(self, args, jwt_id) -> List[Project]:
+    def get_projects(self,
+                     is_public: bool,
+                     created_by: str,
+                     jwt_id) -> List[Project]:
+
         # validate args and construct query dict
         query = {}
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                query['public'] = False
-            if args['public'].lower() == 'true':
-                query['public'] = True
 
-        # TODO: what if 'created_by' not in args? May a user get all projects?
+        if is_public is not None:
+            query['public'] = is_public
 
-        if 'created_by' in args:
+        if created_by is not None:
             # check authorization
             user = self.user_dao.get_user_by_id(jwt_id)
 
-            if args['created_by'] != str(user.id):
+            if created_by != str(user.id):
                 raise ForbiddenError()
             query['created_by'] = user
 
@@ -56,7 +56,18 @@ class ProjectService:
 
         return project
 
-    def create_project(self, body: dict, is_public: bool, data_source_ids: str, display_schema_id: str, user: User) -> Project:
+    def create_project(self,
+                       name: str,
+                       is_public: bool,
+                       data_source_ids: str,
+                       display_schema_id: str,
+                       jwt_id: str) -> Project:
+        # get jwt user
+        user = self.user_dao.get_user_by_id(jwt_id)
+
+        # pack body
+        body = {'name': name}
+
         # pre-validate params (is_public)
         if type(is_public) != bool:
             is_public = False
@@ -114,15 +125,20 @@ class ProjectService:
 
         return project
 
-    def edit_project(self, id, body, user) -> Project:
+    def edit_project(self, id, public, jwt_id) -> Project:
+        # check auth
+        user = self.user_dao.get_user_by_id(jwt_id)
+
         # query project via id
         project = self.project_dao.get_by_id(id)
 
         if project.created_by != user:
             raise ForbiddenError()
 
-        # Forbid changing immutable field
-        self.project_dao.assert_fields_editable(body)
+        body = {}
+
+        if public is None:
+            raise InvalidParamError('Mutation body cannot be empty.')
 
         body['modified'] = datetime.datetime.utcnow
 
@@ -131,7 +147,10 @@ class ProjectService:
 
         return project
 
-    def delete_project(self, id, user) -> dict:
+    def delete_project(self, id: str, jwt_id: str) -> dict:
+        # check auth
+        user = self.user_dao.get_user_by_id(jwt_id)
+
         # query project via id
         project = self.project_dao.get_by_id(id)
 
@@ -140,7 +159,7 @@ class ProjectService:
             raise ForbiddenError()
 
         # delete project
-        project.delete()
+        self.project_dao.delete(project)
 
         return {}
 

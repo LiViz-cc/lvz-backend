@@ -18,26 +18,20 @@ class ShareConfigService:
         self.project_dao = ProjectDao()
         self.user_dao = UserDao()
 
-    def get_share_configs(self, args, user) -> List[ShareConfig]:
+    def get_share_configs(self, jwt_id) -> List[ShareConfig]:
         # TODO: accept query
 
+        # get auth
+        user = self.user_dao.get_user_by_id(jwt_id)
+
         # validate args and construct query dict
-        query = {}
-        query['created_by'] = user
+        query = {'created_by': user}
 
         # query projects with query dict
         share_configs = ShareConfig.objects(**query)
 
-        # query set cannot be modified
-        # create a new list for return
-        share_configs_list = []
-
-        for share_config in share_configs:
-            share_config.desensitize()
-            share_configs_list.append(share_config)
-
         logger.info("Query processed. Detail: {}".format(query))
-        return share_configs_list
+        return share_configs
 
     def get_by_id(self, id: str, password: str) -> ShareConfig:
         # query project via id
@@ -48,16 +42,20 @@ class ShareConfigService:
             self.share_config_dao.assert_password_match(share_config, password)
 
         # remove password field for return
-        share_config.desensitize()
+        # share_config.desensitize()
         return share_config
 
     def create_share_config(self,
-                            body: dict,
-                            user: User,
+                            jwt_id: str,
+                            name: str,
                             project_id: str,
                             password_protected: bool,
                             password: str):
+
         project = self.project_dao.get_by_id(project_id)
+
+        # get auth
+        user = self.user_dao.get_user_by_id(jwt_id)
 
         if project.created_by != user:
             raise ForbiddenError(
@@ -74,6 +72,17 @@ class ShareConfigService:
             if password is not None:
                 raise InvalidParamError(
                     '"password" should not be provided when "password_protected" is disabled.')
+
+        # pack body
+        body = {}
+
+        param_names = ['name', 'linked_project',
+                       'password_protected', 'password']
+        params = [name, project_id, password_protected, password]
+
+        for param_name, param in zip(param_names, params):
+            if param is not None:
+                body[param_name] = param
 
         # construct new project object
         share_config = ShareConfig(**body)
@@ -92,17 +101,15 @@ class ShareConfigService:
         # update user's and project's reference to share_config
         self.project_dao.add_share_config(project, share_config)
 
-        share_config.desensitize()
+        # share_config.desensitize()
         return share_config
 
-    def edit_by_id(self, id: str, user, password: str, body: dict) -> ShareConfig:
+    def edit_by_id(self, id: str, jwt_id: str, password: str, name: str) -> ShareConfig:
         # query project via id
         share_config = self.share_config_dao.get_by_id(id)
 
-        linked_project_id = body.get('linked_project', None)
-        if linked_project_id:
-            raise ForbiddenError(
-                'Share config cannot change the linked project. Please create a new share config.')
+        # get auth
+        user = self.user_dao.get_user_by_id(jwt_id)
 
         if share_config.created_by != user:
             raise ForbiddenError(
@@ -111,8 +118,7 @@ class ShareConfigService:
         # check if password-protected
         self.share_config_dao.assert_password_match(share_config, password)
 
-        # Forbid changing immutable field
-        self.share_config_dao.assert_fields_editable(body)
+        body = {'name': name}
 
         # update modified time
         body["modified"] = datetime.datetime.utcnow
@@ -120,12 +126,15 @@ class ShareConfigService:
         # update project
         self.share_config_dao.modify(share_config, body)
 
-        share_config.desensitize()
+        # share_config.desensitize()
         return share_config
 
-    def delete_by_id(self, id: str, user, password: str) -> dict:
+    def delete_by_id(self, id: str, jwt_id: str, password: str) -> dict:
         # query project via id
         share_config = self.share_config_dao.get_by_id(id)
+
+        # get auth
+        user = self.user_dao.get_user_by_id(jwt_id)
 
         if share_config.created_by != user:
             raise ForbiddenError()
@@ -134,18 +143,21 @@ class ShareConfigService:
         self.share_config_dao.assert_password_match(share_config, password)
 
         # delete project
-        share_config.delete()
+        self.share_config_dao.delete(share_config)
 
         return {}
 
     def change_password(self,
                         id: str,
-                        user: User,
+                        jwt_id: str,
                         old_password: str,
                         new_password: str,
                         ) -> ShareConfig:
         # query project via id
         share_config = self.share_config_dao.get_by_id(id)
+
+        # get auth
+        user = self.user_dao.get_user_by_id(jwt_id)
 
         if share_config.created_by != user:
             raise ForbiddenError()
@@ -181,5 +193,5 @@ class ShareConfigService:
         # save share config
         self.share_config_dao.modify(share_config, modifing_dict)
 
-        share_config.desensitize()
+        # share_config.desensitize()
         return share_config

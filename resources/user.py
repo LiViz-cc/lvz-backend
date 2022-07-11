@@ -3,6 +3,7 @@ from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from services import UserService
+import utils
 from utils.guard import myguard
 from utils.logger import get_the_logger
 
@@ -42,5 +43,11 @@ class UserPasswordResource(Resource):
         # query project via id
         old_password = body.get('old_password', None)
         new_password = body.get('new_password', None)
+
+        # check params
+        utils.myguard.check_literaly.check_type([
+            (str, old_password, 'old_password', False),
+            (str, new_password, 'new_password', False)
+        ])
 
         return self.user_service.change_password(id, jwt_id, old_password, new_password)

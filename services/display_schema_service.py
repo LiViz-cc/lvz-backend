@@ -18,19 +18,21 @@ class DisplaySchemaService:
         self.data_source_dao = DataSourceDao()
         self.display_schema_dao = DisplaySchemaDao()
 
-    def get_display_schemas(self, args, jwt_id) -> List[DisplaySchema]:
+    def get_display_schemas(self,
+                            is_public: bool,
+                            created_by: str,
+                            jwt_id: str) -> List[DisplaySchema]:
         # validate args and construct query dict
         query = {}
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                query['public'] = False
-            if args['public'].lower() == 'true':
-                query['public'] = True
-        if 'created_by' in args:
+
+        if is_public is not None:
+            query['public'] = is_public
+
+        if created_by is not None:
             # check authorization
             user = self.user_dao.get_user_by_id(jwt_id)
 
-            if args['created_by'] != str(user.id):
+            if created_by != str(user.id):
                 raise ForbiddenError()
             query['created_by'] = user
 
@@ -39,23 +41,31 @@ class DisplaySchemaService:
 
         return display_schemas
 
-    def create_display_schema(self, body: dict, jwt_id: str) -> DisplaySchema:
+    def create_display_schema(self,
+                              name: str,
+                              public: bool,
+                              description: str,
+                              echarts_option: str,
+                              linked_project_id: str,
+                              jwt_id: str) -> DisplaySchema:
+
         user = self.user_dao.get_user_by_id(jwt_id)
-
-        # pre-validate params
-        linked_project_id = body.get('linked_project', None)
-        # if not linked_project_id:
-        #     raise InvalidParamError('linked_project cannot be empty.')
-
-        myguard.check_literaly.check_type([
-            (str, linked_project_id, 'linked_project', False)]
-        )
 
         linked_project = self.project_dao.get_by_id(linked_project_id)
         if linked_project.created_by != user:
             raise ForbiddenError()
 
-        body['linked_project'] = linked_project
+        # pack body
+        body = {}
+
+        param_names = ['name', 'public', 'description',
+                       'echarts_option', 'linked_project']
+        params = [name, public, description,
+                  echarts_option, linked_project]
+
+        for param_name, param in zip(param_names, params):
+            if param is not None:
+                body[param_name] = param
 
         # construct new display schema object
         display_schema = DisplaySchema(**body)
@@ -99,8 +109,14 @@ class DisplaySchemaService:
 
         return display_schema
 
-    def edit_display_schema(self, id, body, jwt_id) -> DisplaySchema:
-        # pre-validate params
+    def edit_display_schema(self,
+                            id: str,
+                            name: str,
+                            public: bool,
+                            description: str,
+                            echarts_option: str,
+                            linked_project_id: str,
+                            jwt_id: str) -> DisplaySchema:
 
         # query project via id
         display_schema = self.display_schema_dao.get_by_id(id)
@@ -111,18 +127,21 @@ class DisplaySchemaService:
         if display_schema.created_by != user:
             raise ForbiddenError()
 
+        # pack body
+        body = {}
+
+        param_names = ['name', 'public', 'description',
+                       'echarts_option', 'linked_project']
+        params = [name, public, description,
+                  echarts_option, linked_project_id]
+
+        for param_name, param in zip(param_names, params):
+            if param is not None:
+                body[param_name] = param
+
         # pre-process params
         linked_project_id = body.get('linked_project', None)
         if linked_project_id:
-            # linked_project = self.project_dao.get_by_id(linked_project_id)
-
-            # # check authorization
-            # if linked_project.created_by != display_schema.created_by:
-            #     raise ForbiddenError(
-            #         'linked_project is not created by the user')
-
-            # body['linked_project'] = linked_project
-
             raise ForbiddenError(
                 '"linked_project" cannot be changed after linked. Please create a new display schema.')
 
