@@ -69,7 +69,7 @@ class UserResetResource(Resource):
         env = os.getenv('ENV')
         if env != 'development':
             raise ForbiddenError(
-                'Reseting a user is only allowed in development')
+                'Resetting a user is only allowed in development')
 
         body = request.get_json()
         password = body.get('password')
