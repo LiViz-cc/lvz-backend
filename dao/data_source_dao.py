@@ -1,10 +1,9 @@
-
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
-                    NotFoundError, NotMutableError, UnauthorizedError)
+                    NotFinishedYet, NotFoundError, NotMutableError,
+                    UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 from utils.guard import myguard
-import copy
 
 
 class DataSourceDao:
@@ -42,20 +41,6 @@ class DataSourceDao:
         except LookupError as e:
             raise InvalidParamError(e.message)
 
-    def get_a_copy_by_id(self, data_source_id: str) -> DataSource:
-        """
-        Deeply copy a data source. Caution: Cloned document has not been saved yet.
-
-        Args:
-            data_source_id (str): data_source that needs to make a deep copy
-
-        Returns:
-            DataSource: cloned document (unsaved)
-        """
-        data_source = self.get_by_id(data_source_id)
-        new_data_source = copy.deepcopy(data_source)
-        return new_data_source
-
     def get_a_copy(self, data_source: DataSource) -> DataSource:
         """
         Deeply copy a data source. Caution: Cloned document has not been saved to database yet.
@@ -66,7 +51,14 @@ class DataSourceDao:
         Returns:
             DataSource: cloned document (unsaved)
         """
-        new_data_source = copy.deepcopy(data_source)
+        myguard.check_literaly.check_type([
+            (DataSource, data_source, "Data source", False)
+        ])
+
+        new_data_source = DataSource()
+        for param_name in data_source.property_lists:
+            new_data_source[param_name] = data_source[param_name]
+
         return new_data_source
 
     def delete(self, data_source: DataSource, *args, **kwargs) -> None:

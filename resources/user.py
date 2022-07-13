@@ -2,6 +2,7 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
+from errors import ForbiddenError, InvalidParamError
 from services import UserService
 import utils
 from utils.guard import myguard
@@ -51,3 +52,28 @@ class UserPasswordResource(Resource):
         ])
 
         return self.user_service.change_password(id, jwt_id, old_password, new_password)
+
+
+class UserResetResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.user_service = UserService()
+
+    @response_wrapper
+    @jwt_required()
+    def post(self, id):
+        # NOTE: Danger! This method is only allowed in development mode
+
+        # check if in development mode
+        import os
+        env = os.getenv('ENV')
+        if env != 'development':
+            raise ForbiddenError(
+                'Reseting a user is only allowed in development')
+
+        body = request.get_json()
+        password = body.get('password')
+        # check authorization
+        jwt_id = get_jwt_identity()
+
+        return self.user_service.reset_by_id(id, password, jwt_id)

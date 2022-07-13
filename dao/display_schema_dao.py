@@ -1,6 +1,3 @@
-
-import copy
-
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
@@ -51,7 +48,15 @@ class DisplaySchemaDao:
         Returns:
             DisplaySchema: cloned document (unsaved)
         """
-        new_display_schema = copy.deepcopy(display_schema)
+
+        myguard.check_literaly.check_type([
+            (DisplaySchema, display_schema, "Display Schema", False)
+        ])
+
+        new_display_schema = DisplaySchema()
+        for param_name in display_schema.property_lists:
+            new_display_schema[param_name] = display_schema[param_name]
+
         return new_display_schema
 
     def delete(self, display_schema: DisplaySchema, *args, **kwargs) -> None:

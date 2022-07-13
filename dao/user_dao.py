@@ -5,6 +5,7 @@ from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
 from flask_bcrypt import check_password_hash, generate_password_hash
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
+import utils
 from utils.guard import myguard
 
 
@@ -81,6 +82,12 @@ class UserDao:
 
     def check_password(self, user: User, password):
         myguard.check_literaly.password(password, is_new=False)
+        try:
+            if user.password == None:
+                raise InvalidParamError('desensitized user has no passwords')
+        except DoesNotExist as e:
+            raise InvalidParamError('desensitized user has no passwords')
+
         return check_password_hash(user.password, password)
 
     def assert_password_match(self, user: User, password):
@@ -102,3 +109,14 @@ class UserDao:
             hashed_password (str): hashed password
         """
         return generate_password_hash(password).decode('utf8')
+
+    def delete(self, user: User, *args, **kwargs) -> None:
+        myguard.check_literaly.check_type([
+            (User, user, "User", False)
+        ])
+
+        try:
+            user.delete(*args, **kwargs)
+        except DoesNotExist as e:
+            raise NotFoundError('User', 'id={}'.format(
+                getattr(user, 'id', 'None')))
