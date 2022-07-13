@@ -112,15 +112,20 @@ class UserService():
         user.desensitize()
         return {'token': access_token, 'user': json.loads(user.to_json())}
 
-    def reset_by_id(self, id: str, reset_user: bool, jwt_id: str):
+    def reset_by_id(self, id: str, password: str, jwt_id: str):
         # NOTE: Danger! This method is only allowed in development mode
-        import os
-        env = os.getenv('ENV')
-        if env != 'development':
-            raise ForbiddenError(
-                'Deleting a user is only allowed in development')
 
-        user = self.user_dao.get_user_by_id(id)
+        # check auth
+        if id != jwt_id:
+            raise ForbiddenError()
+
+        # get user
+        user = self.user_dao.get_user_by_id_with_sensitive_info(id)
+
+        # check password
+        self.user_dao.assert_password_match(user, password)
+
+        print('here')
 
         for project in user.projects:
             self.project_dao.delete(project)

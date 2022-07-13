@@ -26,26 +26,6 @@ class UserResource(Resource):
         logger.info('GET user by id {} with jwt_id {}'.format(id, jwt_id))
         return self.user_service.get_user_by_id(id, jwt_id)
 
-    @response_wrapper
-    @jwt_required()
-    def put(self, id):
-        # NOTE: Danger! This method is only allowed in development mode
-        import os
-        env = os.getenv('ENV')
-        if env != 'development':
-            raise ForbiddenError(
-                'Deleting a user is only allowed in development')
-
-        body = request.get_json()
-        reset_user = body.get('reset_user')
-        if not reset_user:
-            raise InvalidParamError('PUT method only allows reset')
-
-        # check authorization
-        jwt_id = get_jwt_identity()
-
-        return self.user_service.reset_by_id(id, reset_user, jwt_id)
-
 
 class UserPasswordResource(Resource):
     def __init__(self) -> None:
@@ -72,3 +52,28 @@ class UserPasswordResource(Resource):
         ])
 
         return self.user_service.change_password(id, jwt_id, old_password, new_password)
+
+
+class UserResetResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.user_service = UserService()
+
+    @response_wrapper
+    @jwt_required()
+    def post(self, id):
+        # NOTE: Danger! This method is only allowed in development mode
+
+        # check if in development mode
+        import os
+        env = os.getenv('ENV')
+        if env != 'development':
+            raise ForbiddenError(
+                'Reseting a user is only allowed in development')
+
+        body = request.get_json()
+        password = body.get('password')
+        # check authorization
+        jwt_id = get_jwt_identity()
+
+        return self.user_service.reset_by_id(id, password, jwt_id)

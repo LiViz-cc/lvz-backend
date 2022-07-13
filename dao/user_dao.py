@@ -82,6 +82,12 @@ class UserDao:
 
     def check_password(self, user: User, password):
         myguard.check_literaly.password(password, is_new=False)
+        try:
+            if user.password == None:
+                raise InvalidParamError('desensitized user has no passwords')
+        except DoesNotExist as e:
+            raise InvalidParamError('desensitized user has no passwords')
+
         return check_password_hash(user.password, password)
 
     def assert_password_match(self, user: User, password):
