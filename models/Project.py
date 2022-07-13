@@ -21,7 +21,7 @@ class Project(db.Document):
                          'data_sources', 'share_configs']
 
     @property
-    def param_names(self):
+    def property_lists(self):
         return ['name', 'created', 'modified',
                 'created_by', 'public', 'description',
                 'data_sources', 'display_schema', 'share_configs']

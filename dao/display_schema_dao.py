@@ -54,7 +54,7 @@ class DisplaySchemaDao:
         ])
 
         new_display_schema = DisplaySchema()
-        for param_name in display_schema.param_names:
+        for param_name in display_schema.property_lists:
             new_display_schema[param_name] = display_schema[param_name]
 
         return new_display_schema

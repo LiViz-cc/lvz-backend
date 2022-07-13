@@ -17,6 +17,6 @@ class DataSource(db.Document):
     uneditable_fields = ['created', 'modified', 'created_by']
 
     @property
-    def param_names(self):
+    def property_lists(self):
         return ['name', 'created', 'modified', 'created_by',
                 'public', 'description', 'static_data', 'data_type']

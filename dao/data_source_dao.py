@@ -56,7 +56,7 @@ class DataSourceDao:
         ])
 
         new_data_source = DataSource()
-        for param_name in data_source.param_names:
+        for param_name in data_source.property_lists:
             new_data_source[param_name] = data_source[param_name]
 
         return new_data_source

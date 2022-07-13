@@ -137,7 +137,7 @@ class ProjectDao:
         ])
 
         new_project = Project()
-        for param_name in project.param_names:
+        for param_name in project.property_lists:
             new_project[param_name] = project[param_name]
 
         return new_project

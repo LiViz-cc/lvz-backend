@@ -16,6 +16,6 @@ class DisplaySchema(db.Document):
     uneditable_fields = ['created', 'modified', 'created_by', 'linked_project']
 
     @property
-    def param_names(self):
+    def property_lists(self):
         return ['name', 'created', 'modified', 'created_by',
                 'public', 'description', 'echarts_option', 'linked_project']
