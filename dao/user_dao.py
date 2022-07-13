@@ -5,6 +5,7 @@ from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
 from flask_bcrypt import check_password_hash, generate_password_hash
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
+import utils
 from utils.guard import myguard
 
 
@@ -102,3 +103,14 @@ class UserDao:
             hashed_password (str): hashed password
         """
         return generate_password_hash(password).decode('utf8')
+
+    def delete(self, user: User, *args, **kwargs) -> None:
+        myguard.check_literaly.check_type([
+            (User, user, "User", False)
+        ])
+
+        try:
+            user.delete(*args, **kwargs)
+        except DoesNotExist as e:
+            raise NotFoundError('User', 'id={}'.format(
+                getattr(user, 'id', 'None')))

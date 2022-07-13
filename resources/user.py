@@ -2,6 +2,7 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
+from errors import ForbiddenError, InvalidParamError
 from services import UserService
 import utils
 from utils.guard import myguard
@@ -24,6 +25,26 @@ class UserResource(Resource):
         jwt_id = get_jwt_identity()
         logger.info('GET user by id {} with jwt_id {}'.format(id, jwt_id))
         return self.user_service.get_user_by_id(id, jwt_id)
+
+    @response_wrapper
+    @jwt_required()
+    def put(self, id):
+        # NOTE: Danger! This method is only allowed in development mode
+        import os
+        env = os.getenv('ENV')
+        if env != 'development':
+            raise ForbiddenError(
+                'Deleting a user is only allowed in development')
+
+        body = request.get_json()
+        reset_user = body.get('reset_user')
+        if not reset_user:
+            raise InvalidParamError('PUT method only allows reset')
+
+        # check authorization
+        jwt_id = get_jwt_identity()
+
+        return self.user_service.reset_by_id(id, reset_user, jwt_id)
 
 
 class UserPasswordResource(Resource):

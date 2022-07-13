@@ -3,7 +3,7 @@ import datetime
 import json
 
 from dao import (DataSourceDao, DisplaySchemaDao, ProjectDao, ShareConfigDao,
-                 UserDao)
+                 UserDao, data_source_dao)
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from flask_jwt_extended import create_access_token
@@ -18,6 +18,8 @@ logger = get_the_logger()
 class UserService():
     def __init__(self) -> None:
         self.user_dao = UserDao()
+        self.project_dao = ProjectDao()
+        self.data_source_dao = DataSourceDao()
 
     def get_user_by_id(self, id, jwt_id) -> User:
         # check authorization
@@ -109,3 +111,24 @@ class UserService():
         # return desensitized created user
         user.desensitize()
         return {'token': access_token, 'user': json.loads(user.to_json())}
+
+    def reset_by_id(self, id: str, reset_user: bool, jwt_id: str):
+        # NOTE: Danger! This method is only allowed in development mode
+        import os
+        env = os.getenv('ENV')
+        if env != 'development':
+            raise ForbiddenError(
+                'Deleting a user is only allowed in development')
+
+        user = self.user_dao.get_user_by_id(id)
+
+        for project in user.projects:
+            self.project_dao.delete(project)
+
+        for data_source in user.data_sources:
+            self.data_source_dao.delete(data_source)
+
+        user = self.user_dao.get_user_by_id(id)
+
+        user.desensitize()
+        return user
