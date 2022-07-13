@@ -233,10 +233,14 @@ class ProjectService:
         new_project['created'] = current_time
         new_project['modified'] = current_time
 
+        self.project_dao.save(new_project, force_insert=True)
+
         if display_schema:
             new_display_schema = self.display_schema_dao.get_a_copy(
                 display_schema)
-            setattr(new_project, 'display_schema', new_display_schema)
+            self.display_schema_dao.save(new_display_schema)
 
-        self.project_dao.save(new_project, force_insert=True)
+            new_project.modify(display_schema=new_display_schema)
+            new_display_schema.update(linked_project=new_project)
+
         return new_project

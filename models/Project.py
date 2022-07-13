@@ -1,8 +1,4 @@
 from database import db
-from errors import (ForbiddenError, InvalidParamError, NotFoundError,
-                    NotMutableError)
-from flask_bcrypt import check_password_hash, generate_password_hash
-from mongoengine.errors import DoesNotExist, ValidationError
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
                                 ListField, ReferenceField, StringField)
 
@@ -23,3 +19,9 @@ class Project(db.Document):
 
     uneditable_fields = ['created', 'modified', 'created_by',
                          'data_sources', 'share_configs']
+
+    @property
+    def param_names(self):
+        return ['name', 'created', 'modified',
+                'created_by', 'public', 'description',
+                'data_sources', 'display_schema', 'share_configs']

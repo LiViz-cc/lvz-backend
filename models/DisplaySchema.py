@@ -1,7 +1,4 @@
 from database import db
-from errors import (ForbiddenError, InvalidParamError, NotFoundError,
-                    NotMutableError)
-from mongoengine.errors import DoesNotExist, ValidationError
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
                                 ListField, ReferenceField, StringField)
 
@@ -17,3 +14,8 @@ class DisplaySchema(db.Document):
     linked_project = ReferenceField('Project', required=True)
 
     uneditable_fields = ['created', 'modified', 'created_by', 'linked_project']
+
+    @property
+    def param_names(self):
+        return ['name', 'created', 'modified', 'created_by',
+                'public', 'description', 'echarts_option', 'linked_project']

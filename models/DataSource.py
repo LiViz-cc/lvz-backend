@@ -1,8 +1,5 @@
 
 from database import db
-from errors import (ForbiddenError, InvalidParamError, NotFoundError,
-                    NotMutableError)
-from mongoengine.errors import DoesNotExist, ValidationError
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
                                 ListField, ReferenceField, StringField)
 
@@ -18,3 +15,8 @@ class DataSource(db.Document):
     data_type = StringField(required=True)
 
     uneditable_fields = ['created', 'modified', 'created_by']
+
+    @property
+    def param_names(self):
+        return ['name', 'created', 'modified', 'created_by',
+                'public', 'description', 'static_data', 'data_type']

@@ -1,5 +1,4 @@
 
-import copy
 from typing import List
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
@@ -132,12 +131,15 @@ class ProjectDao:
         Returns:
             Project: cloned document (unsaved)
         """
-        # NOTE: a deepcopy of a MongoDB document is a shallow copy of the object itself
-        new_project = copy.deepcopy(project)
 
-        # # TODO: is it okay to change id by this?
-        # if not new_project.modify(id=0):
-        #     raise InvalidParamError('when modify a new project')
+        myguard.check_literaly.check_type([
+            (Project, project, "Project", False)
+        ])
+
+        new_project = Project()
+        for param_name in project.param_names:
+            new_project[param_name] = project[param_name]
+
         return new_project
 
     def delete(self, project: Project, *args, **kwargs) -> None:
