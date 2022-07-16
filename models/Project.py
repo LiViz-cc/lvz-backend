@@ -13,7 +13,8 @@ class Project(db.Document):
 
     data_sources = ListField(db.ReferenceField(
         'DataSource', reverse_delete_rule=db.PULL))
-    display_schema = ReferenceField('DisplaySchema')
+    display_schema = ReferenceField(
+        'DisplaySchema', default=None, null=True)
     share_configs = ListField(db.ReferenceField(
         'ShareConfig', reverse_delete_rule=db.PULL))
 
