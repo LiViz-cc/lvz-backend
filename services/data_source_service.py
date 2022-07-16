@@ -59,14 +59,17 @@ class DataSourcesService:
                            description: str,
                            static_data: str,
                            data_type: str,
+                           url: str,
+                           slots: list,
                            jwt_id: str) -> DataSource:
 
         # prepare body
         body = {}
 
-        params = [name, public, description, static_data, data_type]
+        params = [name, public, description,
+                  static_data, data_type, url, slots]
         param_names = ['name', 'public',
-                       'description', 'static_data', 'data_type']
+                       'description', 'static_data', 'data_type', 'url', 'slots']
 
         for param_name, param in zip(param_names, params):
             if param is not None:
@@ -100,14 +103,18 @@ class DataSourcesService:
                          public: bool,
                          description: str,
                          static_data: str,
-                         data_type: str, jwt_id) -> DataSource:
+                         data_type: str,
+                         url: str,
+                         slots: list,
+                         jwt_id) -> DataSource:
 
         # prepare body
         body = {}
 
-        params = [name, public, description, static_data, data_type]
+        params = [name, public, description,
+                  static_data, data_type, url, slots]
         param_names = ['name', 'public',
-                       'description', 'static_data', 'data_type']
+                       'description', 'static_data', 'data_type', 'url', 'slots']
 
         for param_name, param in zip(param_names, params):
             if param is not None:

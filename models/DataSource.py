@@ -1,7 +1,8 @@
 
+from email.policy import default
 from database import db
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
-                                ListField, ReferenceField, StringField)
+                                ListField, DictField, ReferenceField, StringField, URLField)
 
 
 class DataSource(db.Document):
@@ -13,10 +14,12 @@ class DataSource(db.Document):
     description = StringField(required=True, default='', max_length=1000)
     static_data = StringField()  # temp, data JSON
     data_type = StringField(required=True)
+    url = URLField(required=True)
+    slots = ListField(DictField(required=True), default=[])
 
     uneditable_fields = ['created', 'modified', 'created_by']
 
     @property
     def property_lists(self):
         return ['name', 'created', 'modified', 'created_by',
-                'public', 'description', 'static_data', 'data_type']
+                'public', 'description', 'static_data', 'data_type', 'url', 'slots']
