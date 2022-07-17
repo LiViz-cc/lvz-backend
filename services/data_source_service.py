@@ -1,4 +1,5 @@
 import datetime
+import json
 from typing import List
 from dao.data_source_dao import DataSourceDao
 from dao.project_dao import ProjectDao
@@ -9,6 +10,7 @@ from errors import (ForbiddenError, InvalidParamError, NotFoundError,
 from models import DataSource, User
 from models.Project import Project
 from mongoengine.errors import DoesNotExist, ValidationError
+from services.api_fetch_service import ApiFetchService
 import utils
 from utils.guard import myguard
 
@@ -18,6 +20,25 @@ class DataSourcesService:
         self.user_dao = UserDao()
         self.project_dao = ProjectDao()
         self.data_source_dao = DataSourceDao()
+        self.api_fetch_service = ApiFetchService()
+
+    def _assert_slots(self, slots: list):
+        utils.myguard.check_literaly.check_type([
+            (list, slots, 'slots', False)
+        ])
+
+        available_params = set()
+        for slot in slots:
+            name = slot.get('name')
+            if name is None:
+                raise InvalidParamError(
+                    '"name" attribute is missing in a slot in data_source')
+
+            if name in available_params:
+                raise InvalidParamError(
+                    'Detect duplicate names of slots: {}'.format(name))
+
+            available_params.add(name)
 
     def get_data_sources(self, is_public: bool, created_by: str, jwt_id: str) -> List[DataSource]:
         # validate args and construct query dict
@@ -39,7 +60,7 @@ class DataSourcesService:
         data_sources = DataSource.objects(**query)
         return data_sources
 
-    def get_data_source_by_id(self, id, jwt_id) -> DataSource:
+    def get_data_source_by_id(self, id, query: dict, jwt_id) -> DataSource:
         # query data source via id
         data_source = self.data_source_dao.get_by_id(id)
 
@@ -51,7 +72,13 @@ class DataSourcesService:
             if not data_source.created_by == user:
                 raise ForbiddenError()
 
-        return data_source
+        if query:
+            data = self.api_fetch_service.get_data(
+                data_source.url, data_source.slots, query)
+
+            return {'data_source': json.loads(data_source.to_json()), 'data': data}
+        else:
+            return data_source
 
     def create_data_source(self,
                            name: str,
@@ -74,6 +101,9 @@ class DataSourcesService:
         for param_name, param in zip(param_names, params):
             if param is not None:
                 body[param_name] = param
+
+        # check if every slot contains a unique name
+        self._assert_slots(slots)
 
         # pre-validate params
         # construct new data source object
@@ -119,6 +149,9 @@ class DataSourcesService:
         for param_name, param in zip(param_names, params):
             if param is not None:
                 body[param_name] = param
+
+        # check if every slot contains a unique name
+        self._assert_slots(slots)
 
         # query project via id
         data_source = self.data_source_dao.get_by_id(id)
