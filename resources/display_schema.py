@@ -41,8 +41,8 @@ class DisplaySchemasResource(Resource):
         user_id = get_jwt_identity()
 
         param_names = ['name', 'public', 'description',
-                       'echarts_option', 'linked_project']
-        name, public, description, echarts_option, linked_project_id = [
+                       'echarts_option', ]
+        name, public, description, echarts_option = [
             body.get(param_name) for param_name in param_names]
 
         # pre-validate params
@@ -50,11 +50,10 @@ class DisplaySchemasResource(Resource):
             (str, name, 'name', False),
             (bool, public, 'public', True),
             (str, description, 'description', True),
-            (str, echarts_option, 'echarts_option', True),
-            (str, linked_project_id, 'linked_project', False)]
-        )
+            (str, echarts_option, 'echarts_option', True)
+        ])
 
-        return self.display_schema_service.create_display_schema(name, public, description, echarts_option, linked_project_id, user_id)
+        return self.display_schema_service.create_display_schema(name, public, description, echarts_option, user_id)
 
 
 class DisplaySchemaResource(Resource):
@@ -77,8 +76,8 @@ class DisplaySchemaResource(Resource):
         user_id = get_jwt_identity()
 
         param_names = ['name', 'public', 'description',
-                       'echarts_option', 'linked_project']
-        name, public, description, echarts_option, linked_project_id = [
+                       'echarts_option', ]
+        name, public, description, echarts_option = [
             body.get(param_name) for param_name in param_names]
 
         # pre-validate params
@@ -86,11 +85,10 @@ class DisplaySchemaResource(Resource):
             (str, name, 'name', True),
             (bool, public, 'public', True),
             (str, description, 'description', True),
-            (str, echarts_option, 'echarts_option', True),
-            (str, linked_project_id, 'linked_project', True)]
+            (str, echarts_option, 'echarts_option', True)]
         )
 
-        return self.display_schema_service.edit_display_schema(id, name, public, description, echarts_option, linked_project_id, user_id)
+        return self.display_schema_service.edit_display_schema(id, name, public, description, echarts_option, user_id)
 
     @response_wrapper
     @jwt_required(optional=True)

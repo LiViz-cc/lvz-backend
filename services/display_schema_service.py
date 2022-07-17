@@ -46,22 +46,21 @@ class DisplaySchemaService:
                               public: bool,
                               description: str,
                               echarts_option: str,
-                              linked_project_id: str,
                               jwt_id: str) -> DisplaySchema:
 
         user = self.user_dao.get_user_by_id(jwt_id)
 
-        linked_project = self.project_dao.get_by_id(linked_project_id)
-        if linked_project.created_by != user:
-            raise ForbiddenError()
+        # linked_project = self.project_dao.get_by_id(linked_project_id)
+        # if linked_project.created_by != user:
+        #     raise ForbiddenError()
 
         # pack body
         body = {}
 
         param_names = ['name', 'public', 'description',
-                       'echarts_option', 'linked_project']
+                       'echarts_option', ]
         params = [name, public, description,
-                  echarts_option, linked_project]
+                  echarts_option]
 
         for param_name, param in zip(param_names, params):
             if param is not None:
@@ -81,19 +80,19 @@ class DisplaySchemaService:
         # save new display schema
         self.display_schema_dao.save(display_schema)
 
-        # store old display schema
-        # TODO: getattr should be moved to DAO
-        try:
-            old_display_schema = getattr(
-                linked_project, 'display_schema', None)
-        except DoesNotExist as e:
-            old_display_schema = None
+        # # store old display schema
+        # # TODO: getattr should be moved to DAO
+        # try:
+        #     old_display_schema = getattr(
+        #         linked_project, 'display_schema', None)
+        # except DoesNotExist as e:
+        #     old_display_schema = None
 
-        # register display_schema in project
-        self.project_dao.change_display_schema(linked_project, display_schema)
+        # # register display_schema in project
+        # self.project_dao.change_display_schema(linked_project, display_schema)
 
-        # delete old display schema
-        self.display_schema_dao.delete(old_display_schema)
+        # # delete old display schema
+        # self.display_schema_dao.delete(old_display_schema)
 
         return display_schema
 
@@ -115,7 +114,6 @@ class DisplaySchemaService:
                             public: bool,
                             description: str,
                             echarts_option: str,
-                            linked_project_id: str,
                             jwt_id: str) -> DisplaySchema:
 
         # query project via id
@@ -131,19 +129,19 @@ class DisplaySchemaService:
         body = {}
 
         param_names = ['name', 'public', 'description',
-                       'echarts_option', 'linked_project']
+                       'echarts_option', ]
         params = [name, public, description,
-                  echarts_option, linked_project_id]
+                  echarts_option, ]
 
         for param_name, param in zip(param_names, params):
             if param is not None:
                 body[param_name] = param
 
-        # pre-process params
-        linked_project_id = body.get('linked_project', None)
-        if linked_project_id:
-            raise ForbiddenError(
-                '"linked_project" cannot be changed after linked. Please create a new display schema.')
+        # # pre-process params
+        # linked_project_id = body.get('linked_project', None)
+        # if linked_project_id:
+        #     raise ForbiddenError(
+        #         '"linked_project" cannot be changed after linked. Please create a new display schema.')
 
         # Forbid changing immutable field
         self.display_schema_dao.assert_fields_editable(body)

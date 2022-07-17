@@ -1,6 +1,7 @@
 from database import db
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
                                 ListField, ReferenceField, StringField)
+from mongoengine import NULLIFY
 
 
 class DisplaySchema(db.Document):
@@ -11,7 +12,8 @@ class DisplaySchema(db.Document):
     public = BooleanField(required=True, default=False)
     description = StringField(required=True, default='', max_length=1000)
     echarts_option = StringField()  # temp, option JSON
-    linked_project = ReferenceField('Project', required=True)
+    linked_project = ReferenceField(
+        'Project', default=None, null=True)
 
     uneditable_fields = ['created', 'modified', 'created_by', 'linked_project']
 

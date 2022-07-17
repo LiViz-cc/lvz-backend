@@ -1,6 +1,7 @@
 from database import db
 from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
                                 ListField, ReferenceField, StringField)
+from mongoengine import NULLIFY, PULL
 
 
 class Project(db.Document):
@@ -12,11 +13,11 @@ class Project(db.Document):
     description = StringField(required=True, default='', max_length=1000)
 
     data_sources = ListField(db.ReferenceField(
-        'DataSource', reverse_delete_rule=db.PULL))
+        'DataSource', reverse_delete_rule=PULL))
     display_schema = ReferenceField(
         'DisplaySchema', default=None, null=True)
     share_configs = ListField(db.ReferenceField(
-        'ShareConfig', reverse_delete_rule=db.PULL))
+        'ShareConfig', reverse_delete_rule=PULL))
 
     uneditable_fields = ['created', 'modified', 'created_by',
                          'data_sources', 'share_configs']
