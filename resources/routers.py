@@ -3,7 +3,7 @@ from flask_restful import Api
 from .auth import LoginResource, SignupResource
 from .data_source import DataSourceResource, DataSourcesResource
 from .display_schema import DisplaySchemaResource, DisplaySchemasResource
-from .project import (ProjectDataSourcesResource, ProjectResource,
+from .project import (ProjectDataSourcesResource, ProjectDispalySchemaResource, ProjectResource,
                       ProjectsResource)
 from .root import RootResource
 from .share_config import (ShareConfigPasswordResource, ShareConfigResource,
@@ -33,6 +33,8 @@ def initialize_routes(api: Api):
 
     api.add_resource(ProjectDataSourcesResource,
                      '/projects/<id>/data_sources')
+    api.add_resource(ProjectDispalySchemaResource,
+                     '/projects/<id>/display_schema')
 
     api.add_resource(ShareConfigsResource, '/share_configs/')
     api.add_resource(ShareConfigResource, '/share_configs/<id>')

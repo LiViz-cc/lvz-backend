@@ -1,12 +1,12 @@
 
+import utils
+from errors import InvalidParamError
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from services import ProjectService
-import utils
 from utils.guard import myguard
 from utils.logger import get_the_logger
-from errors import InvalidParamError
 
 from .response_wrapper import response_wrapper
 
@@ -134,3 +134,23 @@ class ProjectDataSourcesResource(Resource):
         jwt_id = get_jwt_identity()
 
         return self.project_service.remove_data_sources(id, data_source_ids, jwt_id)
+
+
+class ProjectDispalySchemaResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.project_service = ProjectService()
+
+    @response_wrapper
+    @jwt_required()
+    def put(self, id):
+        body = request.get_json()
+        project_id = id
+        display_schema_id = body.get('display_schema')
+        jwt_id = get_jwt_identity()
+
+        utils.myguard.check_literaly.check_type([
+            (str, display_schema_id, 'display_schema', False)
+        ])
+
+        return self.project_service.link_to_display_schema(project_id, display_schema_id, jwt_id)
