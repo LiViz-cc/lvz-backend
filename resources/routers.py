@@ -8,7 +8,7 @@ from .project import (ProjectDataSourcesResource, ProjectDispalySchemaResource, 
 from .root import RootResource
 from .share_config import (ShareConfigPasswordResource, ShareConfigResource,
                            ShareConfigsResource)
-from .user import UserPasswordResource, UserResetResource, UserResource
+from .user import UserPasswordResource, UserResetResource, UserResource, UserUsernameResource
 
 
 def initialize_routes(api: Api):
@@ -20,6 +20,7 @@ def initialize_routes(api: Api):
     api.add_resource(UserResource, '/users/<id>')
     api.add_resource(UserPasswordResource, '/users/<id>/password')
     api.add_resource(UserResetResource, '/users/<id>/reset')
+    api.add_resource(UserUsernameResource, '/users/<id>/username')
 
     # TODO: detailed instructions needed
     api.add_resource(DataSourcesResource, '/data_sources')

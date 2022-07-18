@@ -130,3 +130,19 @@ class UserDao:
         except DoesNotExist as e:
             raise NotFoundError('User', 'id={}'.format(
                 getattr(user, 'id', 'None')))
+
+    def change_username(self, user: User, username: str) -> User:
+        myguard.check_literaly.check_type([
+            (User, user, "User", False)
+        ])
+
+        # update project
+        try:
+            user.modify(username=username)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+        except LookupError as e:
+            raise InvalidParamError(e.message)
+        except NotUniqueError as e:
+            raise InvalidParamError(
+                'Username {} is not unique.'.format(username))

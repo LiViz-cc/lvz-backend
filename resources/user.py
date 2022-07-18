@@ -77,3 +77,30 @@ class UserResetResource(Resource):
         jwt_id = get_jwt_identity()
 
         return self.user_service.reset_by_id(id, password, jwt_id)
+
+
+class UserUsernameResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.user_service = UserService()
+
+    @response_wrapper
+    @jwt_required()
+    def post(self, id):
+        body = request.get_json()
+        user_id = id
+        username, password = [body.get(x) for x in ['username', 'password']]
+        jwt_id = get_jwt_identity()
+
+        utils.myguard.check_literaly.check_type([
+            (str, user_id, 'user_id', False),
+            (str, username, 'username', False),
+            (str, password, 'password', False),
+        ])
+
+        return self.user_service.change_username(
+            user_id=user_id,
+            username=username,
+            password=password,
+            jwt_id=jwt_id,
+        )

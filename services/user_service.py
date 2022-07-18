@@ -135,8 +135,6 @@ class UserService():
         # check password
         self.user_dao.assert_password_match(user, password)
 
-        print('here')
-
         for project in user.projects:
             self.project_dao.delete(project)
 
@@ -146,4 +144,26 @@ class UserService():
         user = self.user_dao.get_user_by_id(id)
 
         user.desensitize()
+        return user
+
+    def change_username(self,
+                        user_id: str,
+                        username: str,
+                        password: str,
+                        jwt_id: str) -> User:
+
+        # check auth
+        if user_id != jwt_id:
+            raise ForbiddenError()
+
+        # get user
+        user = self.user_dao.get_user_by_id_with_sensitive_info(user_id)
+
+        # check password
+        self.user_dao.assert_password_match(user, password)
+
+        # change username
+        self.user_dao.change_username(user, username)
+
+        self.user_dao.desensitize(user)
         return user
