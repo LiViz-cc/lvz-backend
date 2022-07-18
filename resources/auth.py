@@ -26,11 +26,13 @@ class SignupResource(Resource):
         # Unpack body
         email = body.get('email', None)
         password = body.get('password', None)
+        username = body.get('username')
 
         # check literally
         utils.myguard.check_literaly.check_type([
             (str, email, 'email', False),
-            (str, password, 'password', False)
+            (str, password, 'password', False),
+            (str, username, 'username', True)
         ])
         utils.myguard.check_literaly.password(
             password=password,
@@ -38,7 +40,7 @@ class SignupResource(Resource):
             password_alies='password'
         )
 
-        return self.user_service.signUp(email, password)
+        return self.user_service.signUp(email, password, username)
 
 
 class LoginResource(Resource):

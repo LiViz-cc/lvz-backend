@@ -1,5 +1,6 @@
 
 import datetime
+import hashlib
 import json
 
 from dao import (DataSourceDao, DisplaySchemaDao, ProjectDao, ShareConfigDao,
@@ -66,9 +67,15 @@ class UserService():
         user.desensitize()
         return user
 
-    def signUp(self, email: str, password: str, *args, **kwargs):
+    def signUp(self, email: str, password: str, username: str, *args, **kwargs):
+        if not username:
+            username = hashlib.sha256(email.encode('UTF-8')).hexdigest()[:10]
+            # TODO: check if hash crashed. If so, add one more round
+
+        # TODO: add check if username already in
+
         # Pack body
-        body = {'email': email, 'password': password}
+        body = {'email': email, 'password': password, 'username': username}
 
         # construct new user object
         user = User(**body)
