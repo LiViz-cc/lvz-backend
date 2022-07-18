@@ -97,15 +97,18 @@ class UserService():
         logger.info("Created a user with email {}".format(body.get('email')))
         return user
 
-    def login(self, email: str, password: str):
+    def login(self, email: str, password: str, username: str):
         # pre-validate params
-        if type(email) != str:
-            raise InvalidParamError('Email (string) must be provided.')
-
         myguard.check_literaly.password(password=password, is_new=False)
 
         # query user
-        user = self.user_dao.get_user_by_email_with_sensitive_info(email)
+        if email is not None:
+            user = self.user_dao.get_user_by_email_with_sensitive_info(email)
+        elif username is not None:
+            user = self.user_dao.get_user_by_username(
+                username, desensitized=False)
+        else:
+            raise InvalidParamError('Please provide either username or email.')
 
         # check password
         self.user_dao.assert_password_match(user, password)

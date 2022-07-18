@@ -2,6 +2,7 @@
 import email
 
 import utils
+from errors import InvalidParamError
 from flask import request
 from flask_restful import Resource
 from services import (DataSourcesService, DisplaySchemaService, ProjectService,
@@ -56,5 +57,12 @@ class LoginResource(Resource):
         logger.info('Try to log in. Message body: {}'.format(body))
         email = body.get('email', None)
         password = body.get('password', None)
+        username = body.get('username')
 
-        return self.user_service.login(email, password)
+        if email is None and username is None:
+            raise InvalidParamError('Please provide email or username.')
+
+        if email is not None and username is not None:
+            raise InvalidParamError('Please provide either username or email.')
+
+        return self.user_service.login(email, password, username)

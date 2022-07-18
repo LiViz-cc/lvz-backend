@@ -59,6 +59,16 @@ class UserDao:
             raise UnauthorizedError()
         return user
 
+    def get_user_by_username(self, username: str, desensitized=True) -> User:
+        try:
+            user = User.objects.get(username=username)
+        except DoesNotExist:
+            raise NotFoundError('user', 'username={}'.format(username))
+
+        if desensitized:
+            self.desensitize(user)
+        return user
+
     def add_project(self, user: User, project: Project) -> None:
         try:
             user.update(push__projects=project)
