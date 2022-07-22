@@ -72,13 +72,14 @@ class DataSourcesService:
             if not data_source.created_by == user:
                 raise ForbiddenError()
 
+        from mongoengine.fields import DictField
+
         if query:
             data = self.api_fetch_service.get_data(
                 data_source.url, data_source.slots, query)
+            data_source.data = data
 
-            return {'data_source': json.loads(data_source.to_json()), 'data': data}
-        else:
-            return data_source
+        return data_source
 
     def create_data_source(self,
                            name: str,

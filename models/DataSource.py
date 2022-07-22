@@ -16,6 +16,7 @@ class DataSource(db.Document):
     data_type = StringField(required=True)
     url = URLField(required=True)
     slots = ListField(DictField(required=True), default=[])
+    data = DictField(null=True)
 
     uneditable_fields = ['created', 'modified', 'created_by']
 
