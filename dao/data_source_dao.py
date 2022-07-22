@@ -73,3 +73,20 @@ class DataSourceDao:
             except DoesNotExist as e:
                 raise NotFoundError('Data source', 'id={}'.format(
                     getattr(data_source, 'id', 'None')))
+
+    def export_slots_to_dicts(self, data_source: DataSource):
+        myguard.check_literaly.check_type([
+            (DataSource, data_source, "Data source", False)
+        ])
+
+        try:
+            slots = data_source.slots
+        except DoesNotExist as e:
+            raise NotFoundError('Data source', 'id={}'.format(
+                getattr(data_source, 'id', 'None')))
+
+        if not slots:
+            return {}
+
+        # convert documents to SON object and then dictionary
+        return [slot.to_mongo().to_dict() for slot in slots]
