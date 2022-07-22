@@ -65,6 +65,7 @@ class DataSourcesResource(Resource):
             data_type = body.get('data_type')
             url = body.get('url')
             slots = body.get('slots')
+            examples = body.get('examples')
 
             # check type
             utils.myguard.check_literaly.check_type([
@@ -75,7 +76,7 @@ class DataSourcesResource(Resource):
                 (str, data_type, 'data_type', False)
             ])
 
-            return self.data_sources_service.create_data_source(name, public, description, static_data, data_type, url, slots, jwt_id)
+            return self.data_sources_service.create_data_source(name, public, description, static_data, data_type, url, slots, examples, jwt_id)
 
 
 class DataSourceResource(Resource):
@@ -109,6 +110,7 @@ class DataSourceResource(Resource):
         data_type = body.get('data_type')
         url = body.get('url')
         slots = body.get('slots')
+        examples = body.get('examples')
 
         # check type
         # TODO: add check for url and slots for all methods
@@ -125,7 +127,7 @@ class DataSourceResource(Resource):
 
         myguard.check_literaly.object_id(id, 'data source id')
 
-        return self.data_sources_service.edit_data_source(id, name, public, description, static_data, data_type, url, slots, jwt_id)
+        return self.data_sources_service.edit_data_source(id, name, public, description, static_data, data_type, url, slots, examples, jwt_id)
 
     @response_wrapper
     @jwt_required()

@@ -1,18 +1,20 @@
 import datetime
 import json
+import os
 from typing import List
+
+import utils
 from dao.data_source_dao import DataSourceDao
 from dao.project_dao import ProjectDao
 from dao.user_dao import UserDao
-
 from errors import (ForbiddenError, InvalidParamError, NotFoundError,
                     NotMutableError)
 from models import DataSource, User
 from models.Project import Project
 from mongoengine.errors import DoesNotExist, ValidationError
-from services.api_fetch_service import ApiFetchService
-import utils
 from utils.guard import myguard
+
+from services.api_fetch_service import ApiFetchService
 
 
 class DataSourcesService:
@@ -72,8 +74,6 @@ class DataSourcesService:
             if not data_source.created_by == user:
                 raise ForbiddenError()
 
-        from mongoengine.fields import DictField
-
         if query:
             data = self.api_fetch_service.get_data(
                 data_source.url, data_source.slots, query)
@@ -89,15 +89,23 @@ class DataSourcesService:
                            data_type: str,
                            url: str,
                            slots: list,
+                           examples: list,
                            jwt_id: str) -> DataSource:
+
+        # check if in development mode
+        import os
+        env = os.getenv('ENV')
+        if env != 'development':
+            raise ForbiddenError(
+                'Creating a new data source is only allowed in development by admin.')
 
         # prepare body
         body = {}
 
         params = [name, public, description,
-                  static_data, data_type, url, slots]
+                  static_data, data_type, url, slots, examples]
         param_names = ['name', 'public',
-                       'description', 'static_data', 'data_type', 'url', 'slots']
+                       'description', 'static_data', 'data_type', 'url', 'slots', 'examples']
 
         for param_name, param in zip(param_names, params):
             if param is not None:
@@ -137,15 +145,26 @@ class DataSourcesService:
                          data_type: str,
                          url: str,
                          slots: list,
+                         examples: list,
                          jwt_id) -> DataSource:
+
+        # check if contains uneditable params
+        # check if in development mode
+        env = os.getenv('ENV')
+        if env != 'development':
+            if url is not None:
+                raise InvalidParamError('"url" cannot be changed.')
+
+            if slots is not None:
+                raise InvalidParamError('"slots" cannot be changed.')
 
         # prepare body
         body = {}
 
         params = [name, public, description,
-                  static_data, data_type, url, slots]
+                  static_data, data_type, url, slots, examples]
         param_names = ['name', 'public',
-                       'description', 'static_data', 'data_type', 'url', 'slots']
+                       'description', 'static_data', 'data_type', 'url', 'slots', 'examples']
 
         for param_name, param in zip(param_names, params):
             if param is not None:
