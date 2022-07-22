@@ -13,6 +13,10 @@ class DataSourceSlot(EmbeddedDocument):
     default = StringField(required=True, default='', max_length=50)
     alias = StringField(required=True,  default='', max_length=50)
 
+    @property
+    def property_lists(self):
+        return ['name', 'slot_type', 'optional', 'default', 'alias']
+
 
 class DataSourceExample(EmbeddedDocument):
     params = DictField(required=True)
@@ -43,4 +47,5 @@ class DataSource(db.Document):
     @property
     def property_lists(self):
         return ['name', 'created', 'modified', 'created_by',
-                'public', 'description', 'static_data', 'data_type', 'url', 'slots']
+                'public', 'description', 'static_data', 'data_type',
+                'url', 'slots', 'examples']
