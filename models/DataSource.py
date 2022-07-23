@@ -1,17 +1,18 @@
-\
-from database import db
-from mongoengine.fields import (BooleanField, DateTimeField, EmailField,
-                                ListField, DictField, ReferenceField, StringField, URLField)
 
-from mongoengine import EmbeddedDocument, EmbeddedDocumentField, EmbeddedDocumentListField
+from database import db
+from mongoengine import (EmbeddedDocument, EmbeddedDocumentField,
+                         EmbeddedDocumentListField)
+from mongoengine.fields import (BooleanField, DateTimeField, DictField,
+                                EmailField, ListField, ReferenceField,
+                                StringField, URLField)
 
 
 class DataSourceSlot(EmbeddedDocument):
     name = StringField(required=True, max_length=50)
     slot_type = StringField(required=True, default='string', max_length=50)
-    optional = BooleanField(required=True, default=False)
-    default = StringField(required=True, default='', max_length=50)
-    alias = StringField(required=True,  default='', max_length=50)
+    optional = BooleanField(default=False)
+    default = StringField(default=None, null=True, max_length=50)
+    alias = StringField(default='', max_length=50)
 
     @property
     def property_lists(self):

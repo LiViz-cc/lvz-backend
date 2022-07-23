@@ -32,6 +32,8 @@ class DataSourcesService:
         available_params = set()
         for slot in slots:
             name = slot.get('name')
+            alias = slot.get('alias')
+
             if name is None:
                 raise InvalidParamError(
                     '"name" attribute is missing in a slot in data_source')
@@ -40,7 +42,12 @@ class DataSourcesService:
                 raise InvalidParamError(
                     'Detect duplicate names of slots: {}'.format(name))
 
-            available_params.add(name)
+            param_name = alias if alias else name
+            if param_name in available_params:
+                raise InvalidParamError(
+                    'Slot "{}" contains duplicate param names or aliases.'.format(name))
+
+            available_params.add(param_name)
 
     def get_data_sources(self, is_public: bool, created_by: str, jwt_id: str) -> List[DataSource]:
         # validate args and construct query dict

@@ -28,25 +28,38 @@ class ApiFetchService:
         self.weather_api = WeatherAPI()
 
     def get_data(self, url, slots: List[dict], query: dict) -> dict:
-        available_params = set()
-        for slot in slots:
-            name = slot.get('name')
-            if name is None:
-                raise InvalidParamError(
-                    '"name" attribute is missing in a slot in data_source')
-
-            if name in available_params:
-                raise InvalidParamError('Detect duplicate names of slots')
-
-            available_params.add(name)
-
         request_params = {}
-        for k, v in query.items():
-            if k not in available_params:
-                raise InvalidParamError(
-                    '{} is not allowed in this data source'.format(k))
 
-            request_params[k] = v
+        for slot in slots:
+            name, type, optional, default, alias = [
+                slot.get(x) for x in ['name', 'slot_type', 'optional', 'default', 'alias']]
+
+            utils.myguard.check_literaly.check_type([
+                (str, name, 'name', False),
+                (str, type, 'slot_type', False),
+                (bool, optional, 'optional', True),
+                (str, default, 'default', True),
+                (str, alias, 'alias', True),
+            ])
+
+            param_name = alias if alias else name
+            if param_name in request_params:
+                raise InvalidParamError(
+                    'Slot "{}" contains duplicate param names or aliases.'.format(name))
+
+            if not optional:
+                # field is required
+                if param_name not in query:
+                    raise InvalidParamError(
+                        'Please provide {} in query.'.format(name))
+
+                request_params[name] = query[param_name]
+            else:
+                # field is optional
+                if param_name in query:
+                    request_params[name] = query[param_name]
+                elif default:
+                    request_params[name] = default
 
         response = requests.get(url=url, params=request_params)
         return json.loads(response.text)
