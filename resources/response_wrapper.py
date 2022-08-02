@@ -47,7 +47,7 @@ def response_wrapper(func):
 
             elif type(response) == list:
                 # TODO: refine the convertion from List of Document to JSON
-                response_json_list = (x.to_json() for x in response)
+                response_json_list = [x.to_json() for x in response]
                 response_json = '[' + ','.join(response_json_list) + ']'
 
             else:

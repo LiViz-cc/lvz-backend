@@ -25,6 +25,10 @@ class DataSourcesService:
         self.api_fetch_service = ApiFetchService()
 
     def _assert_slots(self, slots: list):
+        '''
+        check if every slot contains a unique name considering alias
+        '''
+
         utils.myguard.check_literaly.check_type([
             (list, slots, 'slots', False)
         ])
@@ -52,7 +56,7 @@ class DataSourcesService:
     def get_data_sources(self,
                          is_public: bool,
                          created_by: str,
-                         data_source_ids: List[str],
+                         #  data_source_ids: List[str],
                          jwt_id: str) -> List[DataSource]:
         # validate args and construct query dict
         query = {}
@@ -69,22 +73,42 @@ class DataSourcesService:
             #     raise ForbiddenError()
             query['created_by'] = created_by
 
-        if data_source_ids:
-            query['id__in'] = data_source_ids
+        # if data_source_ids:
+        #     query['id__in'] = data_source_ids
 
+        # jwt_user = self.user_dao.get_user_by_id(jwt_id)
+
+        # # query data sources with query dict
+        # try:
+        #     data_sources = DataSource.objects(**query)
+
+        #     # check auth
+        #     for data_source in data_sources:
+        #         if not data_source['public'] and data_source['created_by'] != jwt_user:
+        #             raise ForbiddenError(
+        #                 'Cannot access with given authorization for data_source {}'.format(data_source['id']))
+        # except ValidationError as e:
+        #     raise InvalidParamError('ParamError')
+
+        data_sources = DataSource.objects(**query)
+        return data_sources
+
+    def get_data_sources_by_ids(self, ids: List[int], jwt_id) -> DataSource:
+        # check if input contains duplicate ids
+        set_ids = set(ids)
+        if len(set_ids) != len(ids):
+            raise InvalidParamError('Input contains duplicate ids.')
+
+        # get jwt user
         jwt_user = self.user_dao.get_user_by_id(jwt_id)
 
-        # query data sources with query dict
-        try:
-            data_sources = DataSource.objects(**query)
+        data_sources = self.data_source_dao.get_by_ids(ids)
 
-            # check auth
-            for data_source in data_sources:
-                if not data_source['public'] and data_source['created_by'] != jwt_user:
-                    raise ForbiddenError(
-                        'Cannot access with given authorization for data_source {}'.format(data_source['id']))
-        except ValidationError as e:
-            raise InvalidParamError('ParamError')
+        # check auth
+        for data_source in data_sources:
+            if not data_source['public'] and data_source['created_by'] != jwt_user:
+                raise ForbiddenError(
+                    'Cannot access with given authorization for data_source {}'.format(data_source['id']))
 
         return data_sources
 
