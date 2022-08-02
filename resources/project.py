@@ -27,18 +27,42 @@ class ProjectsResource(Resource):
 
         jwt_id = get_jwt_identity()
 
-        # prepare `is_public`
-        is_public = None
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                is_public = False
-            if args['public'].lower() == 'true':
-                is_public = True
+        query_type = args.get('query_type')
 
-        # prepare `created_by`
-        created_by = args.get('created_by')
+        if query_type is None:
+            raise InvalidParamError('Please provide "query_type" in query.')
 
-        return self.project_service.get_projects(is_public, created_by, jwt_id)
+        if query_type == 'id_only':
+            # prepare `ids`
+            ids = args.get('id')
+            if not ids:
+                raise InvalidParamError('Please provide "id" in query.')
+
+            utils.myguard.check_literaly.check_type(
+                [(str, ids, 'id {}'.format(ids), False)]
+            )
+
+            project_ids = ids.split(',')
+            # TODO: add check for IDs
+
+            return self.project_service.get_projects_by_ids(project_ids, jwt_id)
+
+        elif query_type == 'filter':
+            # prepare `is_public`
+            is_public = None
+            if 'public' in args:
+                if args['public'].lower() == 'false':
+                    is_public = False
+                if args['public'].lower() == 'true':
+                    is_public = True
+
+            # prepare `created_by`
+            created_by = args.get('created_by')
+
+            return self.project_service.get_projects(is_public, created_by, jwt_id)
+        else:
+            raise InvalidParamError(
+                'Please provide "query_type" in query. Available inputs: "id_only", "filter".')
 
     @response_wrapper
     @jwt_required()
