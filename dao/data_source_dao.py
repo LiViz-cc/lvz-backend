@@ -1,4 +1,5 @@
 from typing import List
+from dao.base_dao import BaseDao
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFinishedYet, NotFoundError, NotMutableError,
                     UnauthorizedError)
@@ -7,15 +8,9 @@ from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 from utils.guard import myguard
 
 
-class DataSourceDao:
-    def get_by_id(self, id: str) -> DataSource:
-        myguard.check_literaly.object_id(id)
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data source', 'id={}'.format(id))
-
-        return data_source
+class DataSourceDao(BaseDao):
+    def __init__(self) -> None:
+        super().__init__(entity_type=DataSource, entity_name='data source')
 
     def save(self, data_source: DataSource, *args, **kwargs) -> None:
         try:
@@ -91,27 +86,3 @@ class DataSourceDao:
 
         # convert documents to SON object and then dictionary
         return [slot.to_mongo().to_dict() for slot in slots]
-
-    def get_by_ids(self, ids: List[int]) -> List[DataSource]:
-        # check if input contains duplicate ids
-        set_ids = set(ids)
-        if len(set_ids) != len(ids):
-            raise InvalidParamError('Input contains duplicate ids.')
-
-        # query data source via id
-        missing_ids = []
-        data_sources = []
-        for id in ids:
-            try:
-                data_source = self.get_by_id(id)
-            except NotFoundError as e:
-                missing_ids.append(id)
-            else:
-                data_sources.append(data_source)
-
-        # check if any items are missing from result set
-        if missing_ids:
-            raise NotFoundError(target='data_source(s)',
-                                queries=str(missing_ids))
-
-        return data_sources
