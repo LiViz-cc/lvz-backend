@@ -36,7 +36,7 @@ class DataSourcesResource(Resource):
             # prepare `ids`
             ids = args.get('id')
             if not ids:
-                raise InvalidParamError('Please provide "ids" in query.')
+                raise InvalidParamError('Please provide "id" in query.')
 
             utils.myguard.check_literaly.check_type(
                 [(str, ids, 'id {}'.format(ids), False)]
