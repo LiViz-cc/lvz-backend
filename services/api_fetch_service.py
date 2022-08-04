@@ -1,32 +1,13 @@
-
-import datetime
 import json
-import os
 from typing import List
-from urllib import response
 
 import requests
-
 import utils
-from dao import (DataSourceDao, DisplaySchemaDao, ProjectDao, ShareConfigDao,
-                 UserDao)
-from dotenv import load_dotenv
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
-from flask import Response
-from models import DataSource, DisplaySchema, Project, ShareConfig, User
-from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
-from utils.guard import myguard
 
 
 class ApiFetchService:
-    def __init__(self) -> None:
-        self.user_dao = UserDao()
-        self.project_dao = ProjectDao()
-        self.data_source_dao = DataSourceDao()
-        self.display_schema_dao = DisplaySchemaDao()
-        self.weather_api = WeatherAPI()
-
     def get_data(self, url, slots: List[dict], query: dict) -> dict:
         request_params = {}
 
@@ -77,7 +58,7 @@ class WeatherAPI():
         pass
 
     @classmethod
-    def check_status_code(cls, response: Response):
+    def check_status_code(cls, response: requests.Response):
         if response.status_code != 200:
             # raise Exception
             print('status_code: {}'.format(response.status_code))
