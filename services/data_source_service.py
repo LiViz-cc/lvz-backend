@@ -67,40 +67,22 @@ class DataSourcesService:
     def get_data_sources(self,
                          is_public: bool,
                          created_by: str,
-                         #  data_source_ids: List[str],
                          jwt_id: str) -> List[DataSource]:
+        print(is_public, created_by)
+
+        # check if query type allowed
+        if (not created_by or created_by != jwt_id) and not is_public:
+            raise ForbiddenError('This query combination is not allowed.')
+
         # validate args and construct query dict
         query = {}
 
         if is_public is not None:
             query['public'] = is_public
-
         if created_by is not None:
-            # # check authorization
-            # myguard.check_literaly.user_id(jwt_id)
-            # jwt_user = self.user_dao.get_user_by_id(jwt_id)
-
-            # if created_by != str(jwt_user.id):
-            #     raise ForbiddenError()
             query['created_by'] = created_by
 
-        # if data_source_ids:
-        #     query['id__in'] = data_source_ids
-
-        # jwt_user = self.user_dao.get_user_by_id(jwt_id)
-
-        # # query data sources with query dict
-        # try:
-        #     data_sources = DataSource.objects(**query)
-
-        #     # check auth
-        #     for data_source in data_sources:
-        #         if not data_source['public'] and data_source['created_by'] != jwt_user:
-        #             raise ForbiddenError(
-        #                 'Cannot access with given authorization for data_source {}'.format(data_source['id']))
-        # except ValidationError as e:
-        #     raise InvalidParamError('ParamError')
-
+        # query database
         data_sources = DataSource.objects(**query)
         return data_sources
 

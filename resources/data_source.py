@@ -49,15 +49,21 @@ class DataSourcesResource(Resource):
 
         elif query_type == 'filter':
             # prepare `is_public`
-            is_public = False  # default is False
-            if 'public' in args:
-                if args['public'].lower() == 'false':
-                    is_public = False
-                if args['public'].lower() == 'true':
-                    is_public = True
+            is_public = args.get('is_public')
+
+            # convert is_public to bool if not None
+            if is_public is not None:
+                is_public = utils.convert_string_to_bool(
+                    is_public, 'is_public')
 
             # prepare `created_by`
             created_by = args.get('created_by')
+
+            # check type
+            utils.myguard.check_literaly.check_type([
+                (bool, is_public, 'is_public', True),
+                (str, created_by, 'created_by', True)
+            ])
 
             return self.data_sources_service.get_data_sources(is_public, created_by, jwt_id)
         else:
