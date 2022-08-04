@@ -148,6 +148,10 @@ class ProjectDataSourcesResource(Resource):
         data_source_ids = body.get('data_sources', None)
         jwt_id = get_jwt_identity()
 
+        utils.myguard.check_literaly.check_type([
+            (list, data_source_ids, 'data_sources', False)
+        ])
+
         return self.project_service.add_data_sources(id, data_source_ids, jwt_id)
 
     @response_wrapper
