@@ -26,7 +26,9 @@ class DataSourcesService:
 
     def _assert_slots(self, slots: list):
         '''
-        check if every slot contains a unique name considering alias
+        check if every slot contains a unique name considering alias.
+        If alias exists, alias connot start from "_".
+        If alias not exists, name cannot start from "_".
         '''
 
         utils.myguard.check_literaly.check_type([
@@ -46,7 +48,16 @@ class DataSourcesService:
                 raise InvalidParamError(
                     'Detect duplicate names of slots: {}'.format(name))
 
-            param_name = alias if alias else name
+            if alias:
+                param_name = alias
+                if param_name and param_name[0] == '_':
+                    raise InvalidParamError('Alias cannot start from "_".')
+            else:
+                param_name = name
+                if param_name and param_name[0] == '_':
+                    raise InvalidParamError(
+                        'Name cannot start from "_" if alias is not provided.')
+
             if param_name in available_params:
                 raise InvalidParamError(
                     'Slot "{}" contains duplicate param names or aliases.'.format(name))
