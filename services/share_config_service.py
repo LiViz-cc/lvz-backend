@@ -195,3 +195,44 @@ class ShareConfigService:
 
         # share_config.desensitize()
         return share_config
+
+
+class ShareInstanceService():
+    def __init__(self) -> None:
+        self.share_config_dao = ShareConfigDao()
+        self.user_dao = UserDao()
+        self.data_source_dao = DataSourceDao()
+        self.display_schema_dao = DisplaySchemaDao()
+
+    def get_by_id(self,
+                  id: str,
+                  password: str,
+                  query: dict,
+                  jwt_id: str):
+        # get share_config by id
+        share_config = self.share_config_dao.get_by_id(id)
+
+        # check auth
+        if share_config.password is not None:
+            self.share_config_dao.assert_password_match(share_config, password)
+
+        # get project
+        project = share_config.linked_project
+
+        # get first data_source
+        data_sources = project.data_sources
+        if len(data_sources) <= 0:
+            raise InvalidParamError(
+                'Project {} has no data sources.'.format(project.id))
+        data_source = data_sources[0]
+
+        # get latest data
+        self.data_source_dao.refresh_data(data_source, query)
+
+        # get display_schema
+        display_schema = project.display_schema
+
+        # TODO: assemble all above int ECharts option format
+
+        # TODO: return option response
+        return {}
