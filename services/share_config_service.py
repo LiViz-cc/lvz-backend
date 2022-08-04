@@ -220,6 +220,7 @@ class ShareInstanceService():
         project = share_config.linked_project
 
         # get first data_source
+        # TODO: change to support multiple data sources
         data_sources = project.data_sources
         if len(data_sources) <= 0:
             raise InvalidParamError(
