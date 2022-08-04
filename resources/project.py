@@ -49,15 +49,21 @@ class ProjectsResource(Resource):
 
         elif query_type == 'filter':
             # prepare `is_public`
-            is_public = None
-            if 'public' in args:
-                if args['public'].lower() == 'false':
-                    is_public = False
-                if args['public'].lower() == 'true':
-                    is_public = True
+            is_public = args.get('is_public')
+
+            # convert is_public to bool if not None
+            if is_public is not None:
+                is_public = utils.convert_string_to_bool(
+                    is_public, 'is_public')
 
             # prepare `created_by`
             created_by = args.get('created_by')
+
+            # check type
+            utils.myguard.check_literaly.check_type([
+                (bool, is_public, 'is_public', True),
+                (str, created_by, 'created_by', True)
+            ])
 
             return self.project_service.get_projects(is_public, created_by, jwt_id)
         else:

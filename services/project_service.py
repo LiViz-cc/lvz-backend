@@ -25,19 +25,17 @@ class ProjectService():
                      created_by: str,
                      jwt_id) -> List[Project]:
 
+        # check if query type allowed
+        if (not created_by or created_by != jwt_id) and not is_public:
+            raise ForbiddenError('This query combination is not allowed.')
+
         # validate args and construct query dict
         query = {}
 
         if is_public is not None:
             query['public'] = is_public
-
         if created_by is not None:
-            # check authorization
-            user = self.user_dao.get_user_by_id(jwt_id)
-
-            if created_by != str(user.id):
-                raise ForbiddenError()
-            query['created_by'] = user
+            query['created_by'] = created_by
 
         # query projects with query dict
         projects = Project.objects(**query)
@@ -92,7 +90,8 @@ class ProjectService():
         # pre-validate params (is_public)
         if type(is_public) != bool:
             is_public = False
-            body['public'] = is_public
+
+        body['public'] = is_public
 
         # pre-validate params (data_source_id)
         if data_source_ids:
