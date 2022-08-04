@@ -1,20 +1,17 @@
+from typing import List
+from dao.base_dao import BaseDao
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFinishedYet, NotFoundError, NotMutableError,
                     UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
+from services.api_fetch_service import ApiFetchService
 from utils.guard import myguard
 
 
-class DataSourceDao:
-    def get_by_id(self, id: str) -> DataSource:
-        myguard.check_literaly.object_id(id)
-        try:
-            data_source = DataSource.objects.get(id=id)
-        except DoesNotExist:
-            raise NotFoundError('data source', 'id={}'.format(id))
-
-        return data_source
+class DataSourceDao(BaseDao):
+    def __init__(self) -> None:
+        super().__init__(entity_type=DataSource, entity_name='data source')
 
     def save(self, data_source: DataSource, *args, **kwargs) -> None:
         try:
@@ -73,3 +70,28 @@ class DataSourceDao:
             except DoesNotExist as e:
                 raise NotFoundError('Data source', 'id={}'.format(
                     getattr(data_source, 'id', 'None')))
+
+    def export_slots_to_dicts(self, data_source: DataSource):
+        myguard.check_literaly.check_type([
+            (DataSource, data_source, "Data source", False)
+        ])
+
+        try:
+            slots = data_source.slots
+        except DoesNotExist as e:
+            raise NotFoundError('Data source', 'id={}'.format(
+                getattr(data_source, 'id', 'None')))
+
+        if not slots:
+            return {}
+
+        # convert documents to SON object and then dictionary
+        return [slot.to_mongo().to_dict() for slot in slots]
+
+    def refresh_data(self, data_source: DataSource, query: dict):
+        slots = self.export_slots_to_dicts(data_source)
+
+        api_fetch_service = ApiFetchService()
+        data = api_fetch_service.get_data(
+            data_source.url, slots, query)
+        data_source.data = data

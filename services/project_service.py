@@ -12,7 +12,7 @@ from utils.logger import get_the_logger
 logger = get_the_logger()
 
 
-class ProjectService:
+class ProjectService():
     def __init__(self) -> None:
         self.project_dao = ProjectDao()
         self.user_dao = UserDao()
@@ -55,6 +55,27 @@ class ProjectService:
                 raise ForbiddenError()
 
         return project
+
+    def get_projects_by_ids(self,
+                            ids: List[str],
+                            jwt_id: str) -> Project:
+        # check if input contains duplicate ids
+        set_ids = set(ids)
+        if len(set_ids) != len(ids):
+            raise InvalidParamError('Input contains duplicate ids.')
+
+        # get jwt user
+        jwt_user = self.user_dao.get_user_by_id(jwt_id)
+
+        projects = self.project_dao.get_by_ids(ids)
+
+        # check auth
+        for project in projects:
+            if not project['public'] and project['created_by'] != jwt_user:
+                raise ForbiddenError(
+                    'Cannot access with given authorization for project {}'.format(project['id']))
+
+        return projects
 
     def create_project(self,
                        name: str,
@@ -214,7 +235,6 @@ class ProjectService:
         return project
 
     def shallow_copy(self, project_id: str, jwt_id: str) -> Project:
-        # TODO: need an API to implement it
         user = self.user_dao.get_user_by_id(jwt_id)
 
         # query project
@@ -235,6 +255,7 @@ class ProjectService:
 
         self.project_dao.save(new_project, force_insert=True)
 
+        # TODO: need a change
         if display_schema:
             new_display_schema = self.display_schema_dao.get_a_copy(
                 display_schema)
@@ -244,3 +265,38 @@ class ProjectService:
             new_display_schema.update(linked_project=new_project)
 
         return new_project
+
+    def link_to_display_schema(self,
+                               project_id: str,
+                               display_schema_id: str,
+                               jwt_id: str) -> Project:
+
+        project = self.project_dao.get_by_id(project_id)
+        display_schema = self.display_schema_dao.get_by_id(display_schema_id)
+        jwt_user = self.user_dao.get_user_by_id(jwt_id)
+
+        if project.created_by != jwt_user:
+            raise ForbiddenError(
+                'This project was not created by current user')
+
+        if display_schema.created_by != jwt_user:
+            raise ForbiddenError(
+                'This display schema was not created by current user')
+
+        old_display_schema = project.display_schema
+        old_project = display_schema.linked_project
+
+        if old_display_schema:
+            self.display_schema_dao.modify(
+                old_display_schema, {'linked_project': None})
+
+        if old_project:
+            self.project_dao.modify(
+                old_project, {'display_schema': None})
+
+        self.project_dao.modify(
+            project, {'display_schema': display_schema})
+        self.display_schema_dao.modify(
+            display_schema, {'linked_project': project})
+
+        return project

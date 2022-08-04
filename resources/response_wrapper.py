@@ -47,7 +47,7 @@ def response_wrapper(func):
 
             elif type(response) == list:
                 # TODO: refine the convertion from List of Document to JSON
-                response_json_list = (x.to_json() for x in response)
+                response_json_list = [x.to_json() for x in response]
                 response_json = '[' + ','.join(response_json_list) + ']'
 
             else:
@@ -74,6 +74,9 @@ def response_wrapper(func):
             else:
                 return {'title': 'Internal Server Error', 'status': 500, 'detail': ''}, 500
         except Exception as e:
+            if env == 'development':
+                raise e
+
             # return no detail if not in development
             detail = '' if env != 'development' else str(e)
             logger.error('Type:{}, Detail:{}'.format(

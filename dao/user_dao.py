@@ -59,6 +59,16 @@ class UserDao:
             raise UnauthorizedError()
         return user
 
+    def get_user_by_username(self, username: str, desensitized=True) -> User:
+        try:
+            user = User.objects.get(username=username)
+        except DoesNotExist:
+            raise NotFoundError('user', 'username={}'.format(username))
+
+        if desensitized:
+            self.desensitize(user)
+        return user
+
     def add_project(self, user: User, project: Project) -> None:
         try:
             user.update(push__projects=project)
@@ -120,3 +130,19 @@ class UserDao:
         except DoesNotExist as e:
             raise NotFoundError('User', 'id={}'.format(
                 getattr(user, 'id', 'None')))
+
+    def change_username(self, user: User, username: str) -> User:
+        myguard.check_literaly.check_type([
+            (User, user, "User", False)
+        ])
+
+        # update project
+        try:
+            user.modify(username=username)
+        except ValidationError as e:
+            raise InvalidParamError(e.message)
+        except LookupError as e:
+            raise InvalidParamError(e.message)
+        except NotUniqueError as e:
+            raise InvalidParamError(
+                'Username {} is not unique.'.format(username))

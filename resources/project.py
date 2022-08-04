@@ -1,12 +1,12 @@
 
+import utils
+from errors import InvalidParamError
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from services import ProjectService
-import utils
 from utils.guard import myguard
 from utils.logger import get_the_logger
-from errors import InvalidParamError
 
 from .response_wrapper import response_wrapper
 
@@ -27,18 +27,42 @@ class ProjectsResource(Resource):
 
         jwt_id = get_jwt_identity()
 
-        # prepare `is_public`
-        is_public = None
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                is_public = False
-            if args['public'].lower() == 'true':
-                is_public = True
+        query_type = args.get('query_type')
 
-        # prepare `created_by`
-        created_by = args.get('created_by')
+        if query_type is None:
+            raise InvalidParamError('Please provide "query_type" in query.')
 
-        return self.project_service.get_projects(is_public, created_by, jwt_id)
+        if query_type == 'id_only':
+            # prepare `ids`
+            ids = args.get('id')
+            if not ids:
+                raise InvalidParamError('Please provide "id" in query.')
+
+            utils.myguard.check_literaly.check_type(
+                [(str, ids, 'id {}'.format(ids), False)]
+            )
+
+            project_ids = ids.split(',')
+            # TODO: add check for IDs
+
+            return self.project_service.get_projects_by_ids(project_ids, jwt_id)
+
+        elif query_type == 'filter':
+            # prepare `is_public`
+            is_public = None
+            if 'public' in args:
+                if args['public'].lower() == 'false':
+                    is_public = False
+                if args['public'].lower() == 'true':
+                    is_public = True
+
+            # prepare `created_by`
+            created_by = args.get('created_by')
+
+            return self.project_service.get_projects(is_public, created_by, jwt_id)
+        else:
+            raise InvalidParamError(
+                'Please provide "query_type" in query. Available inputs: "id_only", "filter".')
 
     @response_wrapper
     @jwt_required()
@@ -124,6 +148,10 @@ class ProjectDataSourcesResource(Resource):
         data_source_ids = body.get('data_sources', None)
         jwt_id = get_jwt_identity()
 
+        utils.myguard.check_literaly.check_type([
+            (list, data_source_ids, 'data_sources', False)
+        ])
+
         return self.project_service.add_data_sources(id, data_source_ids, jwt_id)
 
     @response_wrapper
@@ -134,3 +162,23 @@ class ProjectDataSourcesResource(Resource):
         jwt_id = get_jwt_identity()
 
         return self.project_service.remove_data_sources(id, data_source_ids, jwt_id)
+
+
+class ProjectDispalySchemaResource(Resource):
+    def __init__(self) -> None:
+        super().__init__()
+        self.project_service = ProjectService()
+
+    @response_wrapper
+    @jwt_required()
+    def put(self, id):
+        body = request.get_json()
+        project_id = id
+        display_schema_id = body.get('display_schema')
+        jwt_id = get_jwt_identity()
+
+        utils.myguard.check_literaly.check_type([
+            (str, display_schema_id, 'display_schema', False)
+        ])
+
+        return self.project_service.link_to_display_schema(project_id, display_schema_id, jwt_id)

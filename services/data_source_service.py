@@ -1,16 +1,20 @@
 import datetime
+import json
+import os
 from typing import List
+
+import utils
 from dao.data_source_dao import DataSourceDao
 from dao.project_dao import ProjectDao
 from dao.user_dao import UserDao
-
 from errors import (ForbiddenError, InvalidParamError, NotFoundError,
                     NotMutableError)
 from models import DataSource, User
 from models.Project import Project
 from mongoengine.errors import DoesNotExist, ValidationError
-import utils
 from utils.guard import myguard
+
+from services.api_fetch_service import ApiFetchService
 
 
 class DataSourcesService:
@@ -18,8 +22,53 @@ class DataSourcesService:
         self.user_dao = UserDao()
         self.project_dao = ProjectDao()
         self.data_source_dao = DataSourceDao()
+        self.api_fetch_service = ApiFetchService()
 
-    def get_data_sources(self, is_public: bool, created_by: str, jwt_id: str) -> List[DataSource]:
+    def _assert_slots(self, slots: list):
+        '''
+        check if every slot contains a unique name considering alias.
+        If alias exists, alias connot start from "_".
+        If alias not exists, name cannot start from "_".
+        '''
+
+        utils.myguard.check_literaly.check_type([
+            (list, slots, 'slots', False)
+        ])
+
+        available_params = set()
+        for slot in slots:
+            name = slot.get('name')
+            alias = slot.get('alias')
+
+            if name is None:
+                raise InvalidParamError(
+                    '"name" attribute is missing in a slot in data_source')
+
+            if name in available_params:
+                raise InvalidParamError(
+                    'Detect duplicate names of slots: {}'.format(name))
+
+            if alias:
+                param_name = alias
+                if param_name and param_name[0] == '_':
+                    raise InvalidParamError('Alias cannot start from "_".')
+            else:
+                param_name = name
+                if param_name and param_name[0] == '_':
+                    raise InvalidParamError(
+                        'Name cannot start from "_" if alias is not provided.')
+
+            if param_name in available_params:
+                raise InvalidParamError(
+                    'Slot "{}" contains duplicate param names or aliases.'.format(name))
+
+            available_params.add(param_name)
+
+    def get_data_sources(self,
+                         is_public: bool,
+                         created_by: str,
+                         #  data_source_ids: List[str],
+                         jwt_id: str) -> List[DataSource]:
         # validate args and construct query dict
         query = {}
 
@@ -27,19 +76,54 @@ class DataSourcesService:
             query['public'] = is_public
 
         if created_by is not None:
-            # check authorization
-            myguard.check_literaly.user_id(jwt_id)
-            user = self.user_dao.get_user_by_id(jwt_id)
+            # # check authorization
+            # myguard.check_literaly.user_id(jwt_id)
+            # jwt_user = self.user_dao.get_user_by_id(jwt_id)
 
-            if created_by != str(user.id):
-                raise ForbiddenError()
+            # if created_by != str(jwt_user.id):
+            #     raise ForbiddenError()
             query['created_by'] = created_by
 
-        # query data sources with query dict
+        # if data_source_ids:
+        #     query['id__in'] = data_source_ids
+
+        # jwt_user = self.user_dao.get_user_by_id(jwt_id)
+
+        # # query data sources with query dict
+        # try:
+        #     data_sources = DataSource.objects(**query)
+
+        #     # check auth
+        #     for data_source in data_sources:
+        #         if not data_source['public'] and data_source['created_by'] != jwt_user:
+        #             raise ForbiddenError(
+        #                 'Cannot access with given authorization for data_source {}'.format(data_source['id']))
+        # except ValidationError as e:
+        #     raise InvalidParamError('ParamError')
+
         data_sources = DataSource.objects(**query)
         return data_sources
 
-    def get_data_source_by_id(self, id, jwt_id) -> DataSource:
+    def get_data_sources_by_ids(self, ids: List[int], jwt_id) -> DataSource:
+        # check if input contains duplicate ids
+        set_ids = set(ids)
+        if len(set_ids) != len(ids):
+            raise InvalidParamError('Input contains duplicate ids.')
+
+        # get jwt user
+        jwt_user = self.user_dao.get_user_by_id(jwt_id)
+
+        data_sources = self.data_source_dao.get_by_ids(ids)
+
+        # check auth
+        for data_source in data_sources:
+            if not data_source['public'] and data_source['created_by'] != jwt_user:
+                raise ForbiddenError(
+                    'Cannot access with given authorization for data_source {}'.format(data_source['id']))
+
+        return data_sources
+
+    def get_data_source_by_id(self, id, query: dict, jwt_id) -> DataSource:
         # query data source via id
         data_source = self.data_source_dao.get_by_id(id)
 
@@ -51,6 +135,9 @@ class DataSourcesService:
             if not data_source.created_by == user:
                 raise ForbiddenError()
 
+        if query:
+            self.data_source_dao.refresh_data(data_source, query)
+
         return data_source
 
     def create_data_source(self,
@@ -59,18 +146,32 @@ class DataSourcesService:
                            description: str,
                            static_data: str,
                            data_type: str,
+                           url: str,
+                           slots: list,
+                           examples: list,
                            jwt_id: str) -> DataSource:
+
+        # check if in development mode
+        import os
+        env = os.getenv('ENV')
+        if env != 'development':
+            raise ForbiddenError(
+                'Creating a new data source is only allowed in development by admin.')
 
         # prepare body
         body = {}
 
-        params = [name, public, description, static_data, data_type]
+        params = [name, public, description,
+                  static_data, data_type, url, slots, examples]
         param_names = ['name', 'public',
-                       'description', 'static_data', 'data_type']
+                       'description', 'static_data', 'data_type', 'url', 'slots', 'examples']
 
         for param_name, param in zip(param_names, params):
             if param is not None:
                 body[param_name] = param
+
+        # check if every slot contains a unique name
+        self._assert_slots(slots)
 
         # pre-validate params
         # construct new data source object
@@ -100,18 +201,36 @@ class DataSourcesService:
                          public: bool,
                          description: str,
                          static_data: str,
-                         data_type: str, jwt_id) -> DataSource:
+                         data_type: str,
+                         url: str,
+                         slots: list,
+                         examples: list,
+                         jwt_id) -> DataSource:
+
+        # check if contains uneditable params
+        # check if in development mode
+        env = os.getenv('ENV')
+        if env != 'development':
+            if url is not None:
+                raise InvalidParamError('"url" cannot be changed.')
+
+            if slots is not None:
+                raise InvalidParamError('"slots" cannot be changed.')
 
         # prepare body
         body = {}
 
-        params = [name, public, description, static_data, data_type]
+        params = [name, public, description,
+                  static_data, data_type, url, slots, examples]
         param_names = ['name', 'public',
-                       'description', 'static_data', 'data_type']
+                       'description', 'static_data', 'data_type', 'url', 'slots', 'examples']
 
         for param_name, param in zip(param_names, params):
             if param is not None:
                 body[param_name] = param
+
+        # check if every slot contains a unique name
+        self._assert_slots(slots)
 
         # query project via id
         data_source = self.data_source_dao.get_by_id(id)

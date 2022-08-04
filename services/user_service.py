@@ -1,5 +1,6 @@
 
 import datetime
+import hashlib
 import json
 
 from dao import (DataSourceDao, DisplaySchemaDao, ProjectDao, ShareConfigDao,
@@ -66,9 +67,15 @@ class UserService():
         user.desensitize()
         return user
 
-    def signUp(self, email: str, password: str, *args, **kwargs):
+    def signUp(self, email: str, password: str, username: str, *args, **kwargs):
+        if not username:
+            username = hashlib.sha256(email.encode('UTF-8')).hexdigest()[:10]
+            # TODO: check if hash crashed. If so, add one more round
+
+        # TODO: add check if username already in
+
         # Pack body
-        body = {'email': email, 'password': password}
+        body = {'email': email, 'password': password, 'username': username}
 
         # construct new user object
         user = User(**body)
@@ -90,15 +97,18 @@ class UserService():
         logger.info("Created a user with email {}".format(body.get('email')))
         return user
 
-    def login(self, email: str, password: str):
+    def login(self, email: str, password: str, username: str):
         # pre-validate params
-        if type(email) != str:
-            raise InvalidParamError('Email (string) must be provided.')
-
         myguard.check_literaly.password(password=password, is_new=False)
 
         # query user
-        user = self.user_dao.get_user_by_email_with_sensitive_info(email)
+        if email is not None:
+            user = self.user_dao.get_user_by_email_with_sensitive_info(email)
+        elif username is not None:
+            user = self.user_dao.get_user_by_username(
+                username, desensitized=False)
+        else:
+            raise InvalidParamError('Please provide either username or email.')
 
         # check password
         self.user_dao.assert_password_match(user, password)
@@ -125,8 +135,6 @@ class UserService():
         # check password
         self.user_dao.assert_password_match(user, password)
 
-        print('here')
-
         for project in user.projects:
             self.project_dao.delete(project)
 
@@ -136,4 +144,26 @@ class UserService():
         user = self.user_dao.get_user_by_id(id)
 
         user.desensitize()
+        return user
+
+    def change_username(self,
+                        user_id: str,
+                        username: str,
+                        password: str,
+                        jwt_id: str) -> User:
+
+        # check auth
+        if user_id != jwt_id:
+            raise ForbiddenError()
+
+        # get user
+        user = self.user_dao.get_user_by_id_with_sensitive_info(user_id)
+
+        # check password
+        self.user_dao.assert_password_match(user, password)
+
+        # change username
+        self.user_dao.change_username(user, username)
+
+        self.user_dao.desensitize(user)
         return user

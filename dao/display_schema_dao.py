@@ -1,3 +1,4 @@
+from dao.base_dao import BaseDao
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
@@ -5,7 +6,10 @@ from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 from utils.guard import myguard
 
 
-class DisplaySchemaDao:
+class DisplaySchemaDao(BaseDao):
+    def __init__(self) -> None:
+        super().__init__(entity_type=DisplaySchema, entity_name='display schema')
+
     def save(self, display_schema: DisplaySchema, *args, **kwargs) -> None:
         myguard.check_literaly.is_not_null(display_schema, 'display_schema')
         try:

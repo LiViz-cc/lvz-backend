@@ -1,5 +1,6 @@
 
 from typing import List
+from dao.base_dao import BaseDao
 from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     NotFoundError, NotMutableError, UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
@@ -7,7 +8,10 @@ from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
 from utils.guard import myguard
 
 
-class ProjectDao:
+class ProjectDao(BaseDao):
+    def __init__(self, entity_type: type = Project, entity_name: str = 'project') -> None:
+        super().__init__(entity_type, entity_name)
+
     def add_data_source(self, project: Project, data_source: DataSource):
         # literally check input
         myguard.check_literaly.is_not_null(project, 'Project')

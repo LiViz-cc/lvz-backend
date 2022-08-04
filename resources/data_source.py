@@ -2,6 +2,7 @@
 from flask import request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
+from errors import InvalidParamError
 from services.data_source_service import DataSourcesService
 from utils.guard import myguard
 from utils.logger import get_the_logger
@@ -26,18 +27,42 @@ class DataSourcesResource(Resource):
         logger.info(
             'GET data_sources with args {} and jwt_id {}'.format(args, jwt_id))
 
-        # prepare `is_public`
-        is_public = None
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                is_public = False
-            if args['public'].lower() == 'true':
-                is_public = True
+        query_type = args.get('query_type')
 
-        # prepare `created_by`
-        created_by = args.get('created_by')
+        if query_type is None:
+            raise InvalidParamError('Please provide "query_type" in query.')
 
-        return self.data_sources_service.get_data_sources(is_public, created_by, jwt_id)
+        if query_type == 'id_only':
+            # prepare `ids`
+            ids = args.get('id')
+            if not ids:
+                raise InvalidParamError('Please provide "id" in query.')
+
+            utils.myguard.check_literaly.check_type(
+                [(str, ids, 'id {}'.format(ids), False)]
+            )
+
+            data_source_ids = ids.split(',')
+            # TODO: add check for IDs
+
+            return self.data_sources_service.get_data_sources_by_ids(data_source_ids, jwt_id)
+
+        elif query_type == 'filter':
+            # prepare `is_public`
+            is_public = False  # default is False
+            if 'public' in args:
+                if args['public'].lower() == 'false':
+                    is_public = False
+                if args['public'].lower() == 'true':
+                    is_public = True
+
+            # prepare `created_by`
+            created_by = args.get('created_by')
+
+            return self.data_sources_service.get_data_sources(is_public, created_by, jwt_id)
+        else:
+            raise InvalidParamError(
+                'Please provide "query_type" in query. Available inputs: "id_only", "filter".')
 
     @response_wrapper
     @jwt_required()
@@ -63,6 +88,9 @@ class DataSourcesResource(Resource):
             description = body.get('description')
             static_data = body.get('namstatic_datae')
             data_type = body.get('data_type')
+            url = body.get('url')
+            slots = body.get('slots')
+            examples = body.get('examples')
 
             # check type
             utils.myguard.check_literaly.check_type([
@@ -73,7 +101,7 @@ class DataSourcesResource(Resource):
                 (str, data_type, 'data_type', False)
             ])
 
-            return self.data_sources_service.create_data_source(name, public, description, static_data, data_type, jwt_id)
+            return self.data_sources_service.create_data_source(name, public, description, static_data, data_type, url, slots, examples, jwt_id)
 
 
 class DataSourceResource(Resource):
@@ -85,12 +113,13 @@ class DataSourceResource(Resource):
     @jwt_required(optional=True)
     def get(self, id):
         myguard._check.object_id(id)
+        query = dict(request.args)
         user_id: str = get_jwt_identity()
 
         logger.info(
             'GET data_source with id {} and jwt_id {}'.format(id, user_id))
 
-        return self.data_sources_service.get_data_source_by_id(id, user_id)
+        return self.data_sources_service.get_data_source_by_id(id, query, user_id)
 
     @response_wrapper
     @jwt_required()
@@ -104,8 +133,12 @@ class DataSourceResource(Resource):
         description = body.get('description')
         static_data = body.get('namstatic_datae')
         data_type = body.get('data_type')
+        url = body.get('url')
+        slots = body.get('slots')
+        examples = body.get('examples')
 
         # check type
+        # TODO: add check for url and slots for all methods
         utils.myguard.check_literaly.check_type([
             (str, name, 'name', True),
             (bool, public, 'public', True),
@@ -119,7 +152,7 @@ class DataSourceResource(Resource):
 
         myguard.check_literaly.object_id(id, 'data source id')
 
-        return self.data_sources_service.edit_data_source(id, name, public, description, static_data, data_type, jwt_id)
+        return self.data_sources_service.edit_data_source(id, name, public, description, static_data, data_type, url, slots, examples, jwt_id)
 
     @response_wrapper
     @jwt_required()

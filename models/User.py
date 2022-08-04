@@ -20,6 +20,7 @@ class User(db.Document):
         ReferenceField('Project', reverse_delete_rule=db.PULL))
     data_sources = ListField(
         ReferenceField('DataSource', reverse_delete_rule=db.PULL))
+    username = StringField(required=True, unique=True)
 
     # field cannot be edited by normal PUT methods
     uneditable_fields = ['email', 'password', 'created',
@@ -49,6 +50,7 @@ class User(db.Document):
         return generate_password_hash(password).decode('utf8')
 
 
+# TODO
 # delete user created projects when delete user
 # it may cause troublesome consequences if delete user
 # maybe in the future add a field 'enable' to User
