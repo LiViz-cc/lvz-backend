@@ -13,25 +13,25 @@ class DisplaySchemasResource(Resource):
         super().__init__()
         self.display_schema_service = DisplaySchemaService()
 
-    @response_wrapper
-    @jwt_required(optional=True)
-    def get(self):
-        # get request args dict
-        args = request.args
-        user_id = get_jwt_identity()
+    # @response_wrapper
+    # @jwt_required(optional=True)
+    # def get(self):
+    #     # get request args dict
+    #     args = request.args
+    #     user_id = get_jwt_identity()
 
-        # prepare `is_public`
-        is_public = None
-        if 'public' in args:
-            if args['public'].lower() == 'false':
-                is_public = False
-            if args['public'].lower() == 'true':
-                is_public = True
+    #     # prepare `is_public`
+    #     is_public = None
+    #     if 'public' in args:
+    #         if args['public'].lower() == 'false':
+    #             is_public = False
+    #         if args['public'].lower() == 'true':
+    #             is_public = True
 
-        # prepare `created_by`
-        created_by = args.get('created_by')
+    #     # prepare `created_by`
+    #     created_by = args.get('created_by')
 
-        return self.display_schema_service.get_display_schemas(is_public, created_by, user_id)
+    #     return self.display_schema_service.get_display_schemas(is_public, created_by, user_id)
 
     @response_wrapper
     @jwt_required()
