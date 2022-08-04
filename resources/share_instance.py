@@ -9,6 +9,7 @@ from services import ShareInstanceService
 
 from .response_wrapper import response_wrapper
 import utils
+logger = get_the_logger()
 
 
 class ShareInstanceResource(Resource):
@@ -25,11 +26,11 @@ class ShareInstanceResource(Resource):
         password = query.get('_pw')
 
         utils.myguard.check_literaly.check_type([
-            (str, id, 'id', True),
-            (str, password, '_pw', False)
+            (str, id, 'id', False),
+            (str, password, '_pw', True)
         ])
 
-        utils.logger.info(
+        logger.info(
             'GET share instance with id {}, jwt_id {}, password {} and query {}'.format(id, jwt_id, password, query))
 
         return self.share_instance_service.get_by_id(id, password, query, jwt_id)
