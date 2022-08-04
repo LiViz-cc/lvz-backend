@@ -16,23 +16,23 @@ class ShareConfigsResource(Resource):
         super().__init__()
         self.share_config_service = ShareConfigService()
 
-    @response_wrapper
-    @jwt_required()
-    def get(self):
-        """
-        Get all share_configs created by current user
+    # @response_wrapper
+    # @jwt_required()
+    # def get(self):
+    #     """
+    #     Get all share_configs created by current user
 
-        Raises:
-            NotFoundError: current user not found in database
+    #     Raises:
+    #         NotFoundError: current user not found in database
 
-        Returns:
-            list of ShareConfigs
-        """
+    #     Returns:
+    #         list of ShareConfigs
+    #     """
 
-        # check authorization
-        jwt_id = get_jwt_identity()
+    #     # check authorization
+    #     jwt_id = get_jwt_identity()
 
-        return self.share_config_service.get_share_configs(jwt_id)
+    #     return self.share_config_service.get_share_configs(jwt_id)
 
     @response_wrapper
     @jwt_required()
