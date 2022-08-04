@@ -68,7 +68,6 @@ class DataSourcesService:
                          is_public: bool,
                          created_by: str,
                          jwt_id: str) -> List[DataSource]:
-        print(is_public, created_by)
 
         # check if query type allowed
         if (not created_by or created_by != jwt_id) and not is_public:
@@ -84,6 +83,7 @@ class DataSourcesService:
 
         # query database
         data_sources = DataSource.objects(**query)
+
         return data_sources
 
     def get_data_sources_by_ids(self, ids: List[int], jwt_id) -> DataSource:
