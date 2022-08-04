@@ -5,6 +5,7 @@ from errors import (EmailAlreadyExistsError, ForbiddenError, InvalidParamError,
                     UnauthorizedError)
 from models import DataSource, DisplaySchema, Project, ShareConfig, User
 from mongoengine.errors import DoesNotExist, NotUniqueError, ValidationError
+from services.api_fetch_service import ApiFetchService
 from utils.guard import myguard
 
 
@@ -86,3 +87,11 @@ class DataSourceDao(BaseDao):
 
         # convert documents to SON object and then dictionary
         return [slot.to_mongo().to_dict() for slot in slots]
+
+    def refresh_data(self, data_source: DataSource, query: dict):
+        slots = self.export_slots_to_dicts(data_source)
+
+        api_fetch_service = ApiFetchService()
+        data = api_fetch_service.get_data(
+            data_source.url, slots, query)
+        data_source.data = data

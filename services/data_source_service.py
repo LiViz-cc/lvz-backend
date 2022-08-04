@@ -125,11 +125,7 @@ class DataSourcesService:
                 raise ForbiddenError()
 
         if query:
-            slots = self.data_source_dao.export_slots_to_dicts(data_source)
-
-            data = self.api_fetch_service.get_data(
-                data_source.url, slots, query)
-            data_source.data = data
+            self.data_source_dao.refresh_data(data_source, query)
 
         return data_source
 
